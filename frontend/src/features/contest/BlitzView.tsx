@@ -1,8 +1,7 @@
 import { Clock, Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ContestGenerateResponse } from "../../api/types";
-import { SourcesList } from "../../components/SourcesList";
-import { asText, sourceFiles, sourceIds } from "./contestUtils";
+import { asText } from "./contestUtils";
 
 interface BlitzViewProps {
   result: ContestGenerateResponse;
@@ -66,7 +65,6 @@ export function BlitzView({ result }: BlitzViewProps) {
                 {revealed[index] ? "Скрыть ответ" : "Показать ответ"}
               </button>
               {revealed[index] ? <p>{answer}</p> : null}
-              <SourcesList chunkIds={sourceIds(item)} files={sourceFiles(item)} />
             </article>
           );
         })}

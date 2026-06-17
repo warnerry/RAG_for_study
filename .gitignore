@@ -3,6 +3,7 @@ rag-venv/
 .env
 .env.*
 !.env.example
+!frontend/.env.example
 chroma_db/*
 !chroma_db/.gitkeep
 data/uploads/*
@@ -14,10 +15,14 @@ data/vector_store/*
 frontend/node_modules/
 frontend/.next/
 frontend/dist/
+frontend/*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
 backend/.pytest_cache/
 backend/**/__pycache__/
 __pycache__/
 .ipynb_checkpoints/
 .DS_Store
+tmp/
 *.bak
 *.before-venv-setup.ipynb

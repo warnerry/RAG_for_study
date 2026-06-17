@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     app_env: str = Field(default="development", alias="APP_ENV")
     app_host: str = Field(default="127.0.0.1", alias="APP_HOST")
     app_port: int = Field(default=8000, alias="APP_PORT")
+    cors_origins: str = Field(default="http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000,http://127.0.0.1:8000", alias="CORS_ORIGINS")
+    public_demo_mode: bool = Field(default=False, alias="PUBLIC_DEMO_MODE")
+    max_files_per_upload: int = Field(default=5, alias="MAX_FILES_PER_UPLOAD")
+    max_upload_mb: int = Field(default=20, alias="MAX_UPLOAD_MB")
 
     llm_provider: str = Field(default="caila", alias="LLM_PROVIDER")
     llm_base_url: str = Field(
@@ -21,11 +25,11 @@ class Settings(BaseSettings):
     )
     llm_api_key: str | None = Field(default=None, alias="LLM_API_KEY")
     llm_model: str = Field(
-        default="just-ai/openai-proxy/gpt-5.4-nano",
+        default="gpt-4o-mini",
         alias="LLM_MODEL",
     )
     llm_model_quality: str = Field(
-        default="just-ai/openai-proxy/gpt-5.4-mini",
+        default="gpt-4o-mini",
         alias="LLM_MODEL_QUALITY",
     )
 
@@ -55,6 +59,10 @@ class Settings(BaseSettings):
         self.upload_dir.mkdir(parents=True, exist_ok=True)
         self.processed_dir.mkdir(parents=True, exist_ok=True)
         self.chroma_persist_dir.mkdir(parents=True, exist_ok=True)
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
     @staticmethod
     def _repo_path(path: Path) -> Path:

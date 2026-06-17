@@ -1,6 +1,6 @@
 # Frontend
 
-Vite + React + TypeScript интерфейс для MVP `RAG for Study`.
+Vite + React + TypeScript интерфейс продукта «Зачётка».
 
 ## Запуск в режиме разработки
 
@@ -17,6 +17,8 @@ npm run dev
 ```bash
 VITE_API_BASE_URL=http://localhost:8000
 ```
+
+Для Vercel или Netlify укажи `VITE_API_BASE_URL` адресом backend на Render. Если frontend отдается самим FastAPI по `/ui/`, переменная не нужна.
 
 ## Production build
 

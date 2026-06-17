@@ -1,8 +1,7 @@
 import { Check, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ContestGenerateResponse } from "../../api/types";
-import { SourcesList } from "../../components/SourcesList";
-import { asBoolean, asText, sourceFiles, sourceIds } from "./contestUtils";
+import { asBoolean, asText } from "./contestUtils";
 
 interface TwoToOneViewProps {
   result: ContestGenerateResponse;
@@ -65,7 +64,6 @@ export function TwoToOneView({ result }: TwoToOneViewProps) {
                   <p>{explanation}</p>
                 </div>
               ) : null}
-              <SourcesList chunkIds={sourceIds(item)} files={sourceFiles(item)} />
             </article>
           );
         })}

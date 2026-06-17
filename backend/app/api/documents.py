@@ -68,13 +68,18 @@ def process_document(document_id: str) -> ProcessDocumentResponse:
 
 @router.post("/upload-and-process", response_model=UploadAndProcessResponse)
 def upload_and_process_documents(files: list[UploadFile] = File(...)) -> UploadAndProcessResponse:
+    settings = get_settings()
     if not files:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Выберите хотя бы один файл.",
         )
+    if len(files) > settings.max_files_per_upload:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Можно загрузить не больше {settings.max_files_per_upload} файлов за один раз.",
+        )
 
-    settings = get_settings()
     collection_id = str(uuid4())
     file_results: list[CollectionFileResponse] = []
     all_chunks: list[dict] = []

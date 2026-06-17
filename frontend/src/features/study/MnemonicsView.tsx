@@ -1,22 +1,25 @@
 import { Lightbulb } from "lucide-react";
-import { SourcesList } from "../../components/SourcesList";
-import { asText, itemFallback, sourceFiles, sourceIds } from "./studyUtils";
+import { asText, itemFallback } from "./studyUtils";
 
 interface MnemonicsViewProps {
   items: Record<string, unknown>[];
+  warning?: string;
 }
 
-export function MnemonicsView({ items }: MnemonicsViewProps) {
+export function MnemonicsView({ items, warning }: MnemonicsViewProps) {
   if (!items.length) {
     return <div className="emptyPanel">Мнемоники пока не сгенерированы.</div>;
   }
 
   return (
     <div className="resultStack">
+      {warning ? <div className="emptyPanel">{warning}</div> : null}
       {items.map((item, index) => {
         const concept = asText(item.concept || item.term, `Понятие ${index + 1}`);
         const association = asText(item.association || item.mnemonic || item.rule, itemFallback(item));
         const memoryPhrase = asText(item.memory_phrase || item.phrase);
+        const rhyme = asText(item.rhyme);
+        const meme = asText(item.meme);
         const whyItWorks = asText(item.why_it_works || item.explanation || item.content);
         const example = asText(item.example);
 
@@ -38,6 +41,18 @@ export function MnemonicsView({ items }: MnemonicsViewProps) {
                   <dd className="mnemonicLine">{memoryPhrase}</dd>
                 </div>
               ) : null}
+              {rhyme ? (
+                <div>
+                  <dt>Рифма</dt>
+                  <dd className="mnemonicLine">{rhyme}</dd>
+                </div>
+              ) : null}
+              {meme ? (
+                <div>
+                  <dt>Ассоциация-мем</dt>
+                  <dd>{meme}</dd>
+                </div>
+              ) : null}
               {whyItWorks ? (
                 <div>
                   <dt>Почему работает</dt>
@@ -51,7 +66,6 @@ export function MnemonicsView({ items }: MnemonicsViewProps) {
                 </div>
               ) : null}
             </dl>
-            <SourcesList chunkIds={sourceIds(item)} files={sourceFiles(item)} />
           </article>
         );
       })}

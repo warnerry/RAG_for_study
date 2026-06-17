@@ -24,7 +24,7 @@ export function ModeSelector({ scenario, onChange }: ModeSelectorProps) {
         onClick={() => onChange("contest")}
       >
         <Trophy size={22} aria-hidden="true" />
-        <span>Профсоюзный конкурс</span>
+        <span>Подготовка к конкурсам</span>
         <small>Блиц, 2к1, биатлон, правовое ориентирование.</small>
       </button>
     </div>

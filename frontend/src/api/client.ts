@@ -1,8 +1,7 @@
-const DEFAULT_API_BASE_URL = "";
+const configuredApiBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "");
 
 export const API_BASE_URL =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ||
-  (import.meta.env.DEV ? "" : DEFAULT_API_BASE_URL);
+  configuredApiBaseUrl || (import.meta.env.DEV ? "" : "");
 
 function humanizeError(message: string): string {
   const lower = message.toLowerCase();

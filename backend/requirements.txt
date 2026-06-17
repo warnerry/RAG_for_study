@@ -16,3 +16,5 @@ chromadb
 openai
 python-dotenv
 sentence-transformers
+pyjwt
+bcrypt

@@ -1,1 +1,1 @@
-"""RAG for Study backend package."""
+"""Backend package for Зачётка."""

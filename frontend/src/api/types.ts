@@ -32,10 +32,31 @@ export interface ChatResponse {
 
 export interface StudyGenerateResponse {
   mode: StudyMode;
+  result_id?: string | null;
+  document_title?: string | null;
   title?: string | null;
   sections?: Record<string, unknown>[] | null;
   sources?: Record<string, unknown>[] | null;
+  requested_count?: number | null;
+  generated_count?: number | null;
+  warning?: string | null;
   items: Record<string, unknown>[];
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface SavedResult {
+  id: string;
+  mode: string;
+  document_title: string;
+  collection_id: string;
+  item_count: number;
+  title?: string | null;
+  items: Record<string, unknown>[];
+  sections?: Record<string, unknown>[] | null;
+  sources?: Record<string, unknown>[] | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ContestGenerateResponse {

@@ -1,14 +1,14 @@
 import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
-import { SourcesList } from "../../components/SourcesList";
-import { asText, itemFallback, sourceFiles, sourceIds } from "./studyUtils";
+import { asText, itemFallback } from "./studyUtils";
 
 interface FlashcardsViewProps {
   items: Record<string, unknown>[];
   requestedCount?: number;
+  warning?: string;
 }
 
-export function FlashcardsView({ items, requestedCount }: FlashcardsViewProps) {
+export function FlashcardsView({ items, requestedCount, warning }: FlashcardsViewProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setFlipped] = useState(false);
 
@@ -50,8 +50,8 @@ export function FlashcardsView({ items, requestedCount }: FlashcardsViewProps) {
 
   return (
     <div className="flashcardTrainer">
-      {requestedCount && total < requestedCount ? (
-        <div className="emptyPanel">По материалам получилось создать {total} карточек.</div>
+      {warning || (requestedCount && total < requestedCount) ? (
+        <div className="emptyPanel">{warning || `По материалам получилось создать ${total} карточек из ${requestedCount} без повторов.`}</div>
       ) : null}
 
       <div className="trainerTopline">
@@ -62,8 +62,14 @@ export function FlashcardsView({ items, requestedCount }: FlashcardsViewProps) {
       </div>
 
       <button className={`trainerCard ${isFlipped ? "flipped" : ""}`} type="button" onClick={() => setFlipped((current) => !current)}>
-        <span>{isFlipped ? "Ответ" : "Вопрос"}</span>
-        <strong>{isFlipped ? back : front}</strong>
+        <span className="trainerCardFace front">
+          <em>Вопрос</em>
+          <strong>{front}</strong>
+        </span>
+        <span className="trainerCardFace back">
+          <em>Ответ</em>
+          <strong>{back}</strong>
+        </span>
       </button>
 
       <div className="trainerControls">
@@ -96,11 +102,6 @@ export function FlashcardsView({ items, requestedCount }: FlashcardsViewProps) {
           <ChevronRight size={16} aria-hidden="true" />
         </button>
       </div>
-
-      <details className="sourceToggle">
-        <summary>Показать источник</summary>
-        <SourcesList chunkIds={sourceIds(currentItem)} files={sourceFiles(currentItem)} />
-      </details>
 
       <div className="compactCardList">
         {items.map((item, index) => (

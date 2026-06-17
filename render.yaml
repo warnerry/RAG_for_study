@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: zachetka-backend
+    env: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: PUBLIC_DEMO_MODE
+        value: true
+      - key: DEFAULT_TOP_K
+        value: 4
+      - key: MAX_FILES_PER_UPLOAD
+        value: 5
+      - key: MAX_UPLOAD_MB
+        value: 20

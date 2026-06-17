@@ -1,7 +1,6 @@
 import { Flag, Map } from "lucide-react";
 import { ContestGenerateResponse } from "../../api/types";
-import { SourcesList } from "../../components/SourcesList";
-import { asText, sourceFiles, sourceIds } from "./contestUtils";
+import { asText } from "./contestUtils";
 
 interface UnionBiathlonViewProps {
   result: ContestGenerateResponse;
@@ -50,7 +49,6 @@ export function UnionBiathlonView({ result }: UnionBiathlonViewProps) {
                     <details key={`${question}-${questionIndex}`}>
                       <summary>{question}</summary>
                       <p>{answer}</p>
-                      <SourcesList chunkIds={sourceIds(item)} files={sourceFiles(item)} />
                     </details>
                   );
                 })}

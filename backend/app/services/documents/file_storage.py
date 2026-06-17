@@ -21,7 +21,7 @@ def get_document_metadata(settings: Settings, document_id: str) -> dict:
     if not path.exists():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Document {document_id} not found.",
+            detail="Документ не найден.",
         )
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -42,6 +42,13 @@ def save_upload_file(settings: Settings, upload_file: UploadFile, collection_id:
 
     with storage_path.open("wb") as output:
         shutil.copyfileobj(upload_file.file, output)
+    max_bytes = settings.max_upload_mb * 1024 * 1024
+    if storage_path.stat().st_size > max_bytes:
+        storage_path.unlink(missing_ok=True)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Файл слишком большой. Максимальный размер: {settings.max_upload_mb} МБ.",
+        )
 
     metadata = {
         "document_id": document_id,

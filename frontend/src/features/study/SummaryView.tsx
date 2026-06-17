@@ -1,6 +1,5 @@
-import { SourcesList } from "../../components/SourcesList";
 import { StudyGenerateResponse } from "../../api/types";
-import { asText, itemFallback, sourceFiles, sourceIds } from "./studyUtils";
+import { asText, itemFallback } from "./studyUtils";
 
 interface SummaryViewProps {
   result: StudyGenerateResponse;
@@ -8,23 +7,8 @@ interface SummaryViewProps {
 
 export function SummaryView({ result }: SummaryViewProps) {
   const sections = Array.isArray(result.sections) && result.sections.length ? result.sections : result.items;
-  const sourceIdsFromResult = Array.isArray(result.sources)
-    ? result.sources
-        .map((source) =>
-          typeof source === "object" && source && "chunk_id" in source ? asText((source as { chunk_id?: unknown }).chunk_id) : ""
-        )
-        .filter(Boolean)
-    : [];
-  const sourceFilesFromResult = Array.isArray(result.sources)
-    ? result.sources
-        .map((source) =>
-          typeof source === "object" && source && "filename" in source ? asText((source as { filename?: unknown }).filename) : ""
-        )
-        .filter(Boolean)
-    : [];
-
   if (!sections.length) {
-    return <div className="emptyPanel">Не получилось собрать пересказ. Попробуйте включить улучшенную генерацию.</div>;
+    return <div className="emptyPanel">Не получилось собрать пересказ. Попробуйте сгенерировать еще раз.</div>;
   }
 
   return (
@@ -47,11 +31,9 @@ export function SummaryView({ result }: SummaryViewProps) {
             ) : (
               <p>{content}</p>
             )}
-            <SourcesList chunkIds={sourceIds(item)} files={sourceFiles(item)} />
           </article>
         );
       })}
-      <SourcesList chunkIds={sourceIdsFromResult} files={sourceFilesFromResult} />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Activity, Database } from "lucide-react";
+import { Activity } from "lucide-react";
 
 interface HeaderProps {
   apiStatus: "checking" | "ok" | "error";
@@ -6,17 +6,15 @@ interface HeaderProps {
 
 export function Header({ apiStatus }: HeaderProps) {
   const statusLabel =
-    apiStatus === "ok" ? "API online" : apiStatus === "error" ? "API недоступен" : "Проверяю API";
+    apiStatus === "ok" ? "Сервер готов" : apiStatus === "error" ? "Сервер недоступен" : "Проверяем сервер";
 
   return (
     <header className="topHeader">
       <div className="brand">
-        <div className="brandMark">
-          <Database size={22} aria-hidden="true" />
-        </div>
+        <img className="brandLogo" src="zachetka-logo.png" alt="" />
         <div>
-          <p>RAG for Study</p>
-          <strong>Study & Contest Copilot</strong>
+          <p>Зачётка</p>
+          <strong>От конспекта до конкурса</strong>
         </div>
       </div>
       <div className={`apiStatus ${apiStatus}`}>

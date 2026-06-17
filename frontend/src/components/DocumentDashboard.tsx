@@ -11,8 +11,6 @@ export function DocumentDashboard({ documentState, onOpenTab }: DocumentDashboar
   const ready = Boolean(collection || documentState.processed);
   const files = collection?.files || (documentState.uploaded ? [{ ...documentState.uploaded, chunks_count: documentState.processed?.chunks_count || 0 }] : []);
   const chunksCount = collection?.chunks_count || documentState.processed?.chunks_count || 0;
-  const collectionId = collection?.collection_id || documentState.processed?.collection_id || documentState.uploaded?.collection_id;
-
   return (
     <section className="panel dashboardPanel">
       <div className="panelHeaderLine">
@@ -40,12 +38,6 @@ export function DocumentDashboard({ documentState, onOpenTab }: DocumentDashboar
               </li>
             ))}
           </ul>
-          {collectionId ? (
-            <details className="technicalDetails">
-              <summary>Технические данные</summary>
-              <small>Коллекция: {collectionId}</small>
-            </details>
-          ) : null}
         </div>
       ) : null}
 
@@ -67,8 +59,8 @@ export function DocumentDashboard({ documentState, onOpenTab }: DocumentDashboar
         </div>
         <div>
           <MessageCircle size={20} aria-hidden="true" />
-          <strong>Чат с источниками</strong>
-          <span>Ответы только на основе найденных фрагментов материалов.</span>
+          <strong>Чат по материалам</strong>
+          <span>Ответы только на основе загруженных материалов.</span>
         </div>
       </div>
 

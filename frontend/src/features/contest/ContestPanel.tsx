@@ -21,7 +21,6 @@ const modeLabels: Record<ContestMode, string> = {
 
 export function ContestPanel({ collectionId, ready }: ContestPanelProps) {
   const [mode, setMode] = useState<ContestMode>("blitz");
-  const [quality, setQuality] = useState(false);
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [results, setResults] = useState<Partial<Record<ContestMode, ContestGenerateResponse>>>({});
@@ -38,7 +37,7 @@ export function ContestPanel({ collectionId, ready }: ContestPanelProps) {
     setError("");
 
     try {
-      const response = await generateContest(collectionId, mode, quality);
+      const response = await generateContest(collectionId, mode, mode === "union_biathlon");
       setResults((current) => ({ ...current, [mode]: response }));
     } catch (contestError) {
       setError(contestError instanceof Error ? contestError.message : "Не удалось сгенерировать тренировку.");
@@ -49,7 +48,7 @@ export function ContestPanel({ collectionId, ready }: ContestPanelProps) {
 
   function renderResult() {
     if (!result) {
-      return <div className="emptyPanel">Выберите формат тренировки и запустите генерацию. Результаты режимов сохраняются отдельно.</div>;
+      return <div className="emptyPanel">Выберите формат тренировки и нажмите «Сгенерировать». Результаты режимов сохраняются отдельно.</div>;
     }
 
     if (mode === "blitz") return <BlitzView result={result} />;
@@ -64,10 +63,6 @@ export function ContestPanel({ collectionId, ready }: ContestPanelProps) {
           <p className="eyebrow">Конкурсный режим</p>
           <h2>Профсоюзные тренировки</h2>
         </div>
-        <label className="qualityToggle">
-          <input type="checkbox" checked={quality} onChange={(event) => setQuality(event.target.checked)} />
-          Улучшенная генерация
-        </label>
       </div>
 
       <div className="segmentedControl contest">

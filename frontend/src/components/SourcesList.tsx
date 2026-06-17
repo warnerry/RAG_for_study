@@ -16,14 +16,13 @@ export function SourcesList({ sources = [], chunkIds = [], files = [] }: Sources
 
   return (
     <div className="sourcesList">
+      {sources.length ? <p className="sourcesIntro">Опора ответа</p> : null}
       {sources.map((source, index) => (
         <details key={`${source.chunk_id}-${index}`} className="sourceItem">
           <summary>
-            Источник: {source.filename || "материал"}, фрагмент {index + 1}
-            <span>{source.chunk_id}</span>
+            {source.filename || "материал"}, фрагмент {index + 1}
           </summary>
           <p>{source.text}</p>
-          {typeof source.score === "number" ? <small>Точность поиска: {source.score.toFixed(3)}</small> : null}
         </details>
       ))}
       {!sources.length &&

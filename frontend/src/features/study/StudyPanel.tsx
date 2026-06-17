@@ -30,7 +30,6 @@ const countLabels: Partial<Record<StudyMode, string>> = {
 export function StudyPanel({ collectionId, ready }: StudyPanelProps) {
   const [mode, setMode] = useState<StudyMode>("summary");
   const [count, setCount] = useState(10);
-  const [quality, setQuality] = useState(false);
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [results, setResults] = useState<Partial<Record<StudyMode, StudyGenerateResponse>>>({});
@@ -47,7 +46,7 @@ export function StudyPanel({ collectionId, ready }: StudyPanelProps) {
     setError("");
 
     try {
-      const response = await generateStudy(collectionId, mode, quality, mode === "summary" ? undefined : count);
+      const response = await generateStudy(collectionId, mode, mode === "mnemonics", mode === "summary" ? undefined : count);
       setResults((current) => ({ ...current, [mode]: response }));
     } catch (studyError) {
       setError(studyError instanceof Error ? studyError.message : "Не удалось сгенерировать учебный материал.");
@@ -58,13 +57,13 @@ export function StudyPanel({ collectionId, ready }: StudyPanelProps) {
 
   function renderResult() {
     if (!result) {
-      return <div className="emptyPanel">Выберите режим и нажмите «Сгенерировать». Результаты сохранятся отдельно для каждого режима.</div>;
+      return <div className="emptyPanel">Выберите режим подготовки и нажмите «Сгенерировать». Результаты сохранятся отдельно для каждого режима.</div>;
     }
 
     if (mode === "summary") return <SummaryView result={result} />;
-    if (mode === "exam_questions") return <ExamQuestionsView items={result.items} />;
-    if (mode === "flashcards") return <FlashcardsView items={result.items} requestedCount={count} />;
-    return <MnemonicsView items={result.items} />;
+    if (mode === "exam_questions") return <ExamQuestionsView items={result.items} warning={result.warning || undefined} />;
+    if (mode === "flashcards") return <FlashcardsView items={result.items} requestedCount={result.requested_count || count} warning={result.warning || undefined} />;
+    return <MnemonicsView items={result.items} warning={result.warning || undefined} />;
   }
 
   return (
@@ -74,10 +73,6 @@ export function StudyPanel({ collectionId, ready }: StudyPanelProps) {
           <p className="eyebrow">Учебный режим</p>
           <h2>Учебные активности</h2>
         </div>
-        <label className="qualityToggle">
-          <input type="checkbox" checked={quality} onChange={(event) => setQuality(event.target.checked)} />
-          Улучшенная генерация
-        </label>
       </div>
 
       <div className="segmentedControl">

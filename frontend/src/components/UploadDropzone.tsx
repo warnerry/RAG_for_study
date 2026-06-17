@@ -1,5 +1,5 @@
 import { ChangeEvent, DragEvent, useEffect, useMemo, useState } from "react";
-import { CheckCircle2, FileUp, RefreshCw } from "lucide-react";
+import { CheckCircle2, FileUp } from "lucide-react";
 import { uploadAndProcessDocuments } from "../api/documents";
 import { DocumentState } from "../api/types";
 import { ErrorState } from "./ErrorState";
@@ -50,41 +50,13 @@ export function UploadDropzone({ documentState, onChange }: UploadDropzoneProps)
     return () => window.clearInterval(timer);
   }, [isProcessing]);
 
-  function setFiles(fileList?: FileList | File[]) {
-    setError("");
-    if (!fileList?.length) return;
-
-    const files = Array.from(fileList);
-    const invalid = files.find((file) => !allowedExtensions.test(file.name));
-    if (invalid) {
-      setError("Неподдерживаемый формат файла. Поддерживаемые форматы: PDF, DOCX, TXT, MD, PPTX, XLSX, PNG, JPG.");
-      return;
-    }
-    setSelectedFiles(files);
-  }
-
-  function handleInput(event: ChangeEvent<HTMLInputElement>) {
-    setFiles(event.target.files || undefined);
-  }
-
-  function handleDrop(event: DragEvent<HTMLLabelElement>) {
-    event.preventDefault();
-    setDragging(false);
-    setFiles(event.dataTransfer.files);
-  }
-
-  async function handleUploadAndProcess() {
-    if (!selectedFiles.length) {
-      setError("Выберите один или несколько файлов.");
-      return;
-    }
-
+  async function startUpload(files: File[]) {
     setProcessing(true);
     setActiveStep(0);
     setError("");
 
     try {
-      const result = await uploadAndProcessDocuments(selectedFiles);
+      const result = await uploadAndProcessDocuments(files);
       setActiveStep(processingSteps.length - 1);
       onChange({
         collection: result,
@@ -112,12 +84,37 @@ export function UploadDropzone({ documentState, onChange }: UploadDropzoneProps)
     }
   }
 
+  function setFiles(fileList?: FileList | File[]) {
+    setError("");
+    if (!fileList?.length) return;
+
+    const files = Array.from(fileList);
+    const invalid = files.find((file) => !allowedExtensions.test(file.name));
+    if (invalid) {
+      setError("Неподдерживаемый формат файла. Поддерживаемые форматы: PDF, DOCX, TXT, MD, PPTX, XLSX, PNG, JPG.");
+      return;
+    }
+    setSelectedFiles(files);
+    void startUpload(files);
+  }
+
+  function handleInput(event: ChangeEvent<HTMLInputElement>) {
+    setFiles(event.target.files || undefined);
+    event.target.value = "";
+  }
+
+  function handleDrop(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    setDragging(false);
+    setFiles(event.dataTransfer.files);
+  }
+
   return (
     <section className="panel uploadPanel">
       <div className="panelHeaderLine">
         <div>
           <p className="eyebrow">Загрузка материалов</p>
-          <h2>Загрузите файлы</h2>
+          <h2>Загрузите материалы</h2>
         </div>
         {collection ? <span className="successPill">Материалы готовы</span> : null}
       </div>
@@ -160,15 +157,8 @@ export function UploadDropzone({ documentState, onChange }: UploadDropzoneProps)
 
       {error ? <ErrorState message={error} /> : null}
 
-      <div className="buttonGrid">
-        <button className="primaryButton" type="button" onClick={handleUploadAndProcess} disabled={!selectedFiles.length || isProcessing}>
-          <RefreshCw size={16} className={isProcessing ? "spinIcon" : ""} aria-hidden="true" />
-          {isProcessing ? "Обрабатываем" : collection ? "Загрузить новые материалы" : "Загрузить и обработать"}
-        </button>
-      </div>
-
       <div className="documentMeta">
-        <strong>{collection ? "Готово! Материалы обработаны, можно начинать подготовку." : "Материалы пока не выбраны"}</strong>
+        <strong>{collection ? "Материалы готовы — можно начинать подготовку." : "Выберите файлы, обработка начнется автоматически."}</strong>
         <span>
           {collection
             ? `Найдено смысловых фрагментов: ${collection.chunks_count}`
@@ -183,12 +173,6 @@ export function UploadDropzone({ documentState, onChange }: UploadDropzoneProps)
               </li>
             ))}
           </ul>
-        ) : null}
-        {collection ? (
-          <details className="technicalDetails">
-            <summary>Технические данные</summary>
-            <small>Коллекция: {collection.collection_id}</small>
-          </details>
         ) : null}
       </div>
     </section>

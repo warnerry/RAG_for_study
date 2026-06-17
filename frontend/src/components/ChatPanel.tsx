@@ -34,7 +34,7 @@ export function ChatPanel({ collectionId, ready }: ChatPanelProps) {
   const emptyText = useMemo(
     () =>
       ready
-        ? "Задай вопрос или выбери быстрый промпт. Ответы будут сопровождаться источниками."
+        ? "Задайте вопрос или выберите быструю подсказку. Если ответа нет в материалах, Зачётка честно скажет об этом."
         : "Сначала загрузите и обработайте материалы.",
     [ready]
   );
@@ -76,10 +76,10 @@ export function ChatPanel({ collectionId, ready }: ChatPanelProps) {
     <section className="panel chatPanel">
       <div className="panelHeaderLine">
         <div>
-          <p className="eyebrow">Чат с источниками</p>
+          <p className="eyebrow">Чат по материалам</p>
           <h2>Чат по материалам</h2>
         </div>
-        <span className={ready ? "successPill" : "softPill"}>{ready ? "Источники включены" : "Ждет материалы"}</span>
+        <span className={ready ? "successPill" : "softPill"}>{ready ? "Готов к вопросам" : "Ждет материалы"}</span>
       </div>
 
       <div className="suggestionRow">

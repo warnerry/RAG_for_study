@@ -11,13 +11,14 @@ export function Hero({ scenario, onScenarioChange }: HeroProps) {
   return (
     <section className="heroSection">
       <div className="heroCopy">
-        <p className="eyebrow">Подготовка по материалам</p>
-        <h1>Подготовка по документам с ответами, вопросами и источниками</h1>
+        <img className="heroLogo" src="zachetka-logo.png" alt="" />
+        <p className="eyebrow">Зачётка</p>
+        <h1>От конспекта до конкурса</h1>
         <p className="heroLead">
-          Загрузите учебные материалы, положения, презентации, таблицы или изображения, соберите тренировку и
-          проверь ответы в чате, который опирается на фрагменты документа.
+          Загрузите учебные материалы, положения, презентации, таблицы или изображения. Зачётка сама разберет
+          материалы и соберет пересказ, карточки, мнемоники, вопросы и конкурсные тренировки.
         </p>
-        <div className="heroPipeline" aria-label="Пайплайн">
+        <div className="heroPipeline" aria-label="Этапы работы">
           <span>
             <ArrowDownToLine size={16} /> Загрузка
           </span>
