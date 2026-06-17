@@ -1,7 +1,5 @@
 from functools import lru_cache
 
-import chromadb
-from chromadb.utils import embedding_functions
 from fastapi import HTTPException, status
 
 from app.core.config import Settings, get_settings
@@ -11,10 +9,14 @@ COLLECTION_NAME = "documents"
 
 @lru_cache
 def _embedding_function(model_name: str):
+    from chromadb.utils import embedding_functions
+
     return embedding_functions.SentenceTransformerEmbeddingFunction(model_name=model_name)
 
 
 def get_collection(settings: Settings | None = None):
+    import chromadb
+
     settings = settings or get_settings()
     if settings.embeddings_provider != "local":
         raise HTTPException(
