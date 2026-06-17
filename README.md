@@ -9,6 +9,31 @@
 
 `RAG.ipynb` сохранен как исследовательская основа и не используется как основной код приложения.
 
+## Быстрый локальный запуск
+
+Backend:
+
+```bash
+cd backend
+../rag-venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Локальные адреса:
+
+- frontend: `http://127.0.0.1:5173/`;
+- backend health-check: `http://127.0.0.1:8000/health`;
+- backend API: `http://127.0.0.1:8000/api`.
+
+Если виртуального окружения `rag-venv` еще нет, создай его и установи зависимости по инструкции в разделе Backend.
+
 ## Стек
 
 - Backend: FastAPI, Pydantic, sentence-transformers, ChromaDB.
@@ -192,6 +217,12 @@ curl -X POST http://127.0.0.1:8000/api/contest/generate \
 Backend можно поднять на Render Free из `render.yaml`. В переменных окружения нужно указать `LLM_API_KEY`, `LLM_BASE_URL`, `CORS_ORIGINS` с доменом frontend, а при необходимости изменить `MAX_FILES_PER_UPLOAD` и `MAX_UPLOAD_MB`.
 
 Frontend можно развернуть на Vercel или Netlify из папки `frontend`: команда сборки `npm run build`, папка публикации `dist`. Для отдельного frontend-домена укажи `VITE_API_BASE_URL=https://<backend-on-render>`.
+
+Текущие демо-адреса:
+
+- frontend: `https://flourishing-brigadeiros-d5da50.netlify.app`;
+- backend: `https://rag-for-study.onrender.com`;
+- health-check: `https://rag-for-study.onrender.com/health`.
 
 Ограничения бесплатного деплоя: Render Free может засыпать после простоя, а локальное файловое хранилище и Chroma подходят только для демо. Для постоянного хранения следующим этапом лучше подключить S3-совместимое хранилище и отдельную векторную базу.
 
