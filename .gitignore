@@ -1,5 +1,7 @@
 rag-venv/
 .venv/
+chroma_db/*
+!chroma_db/.gitkeep
 __pycache__/
 .ipynb_checkpoints/
 .DS_Store

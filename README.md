@@ -7,11 +7,13 @@
 - `RAG.ipynb` - Jupyter Notebook с примером RAG.
 - `Адреса и аудитории.pdf` - документ для загрузки через `PyPDFLoader`.
 - `RAG_files/` - картинки, вынесенные из ноутбука отдельными файлами.
+- `chroma_db/` - локальная папка для базы ChromaDB.
+- `rag-venv/` - локальное виртуальное окружение Python.
 
 ## Как запустить
 
 ```bash
-cd /Users/denis/Documents/EGE/RAG_for_study
+cd /Users/denis/Программирование/RAG_for_study
 python3 -m venv rag-venv
 source rag-venv/bin/activate
 python -m pip install -U pip
