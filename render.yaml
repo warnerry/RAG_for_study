@@ -10,9 +10,21 @@ services:
         value: production
       - key: PUBLIC_DEMO_MODE
         value: true
+      - key: CORS_ORIGINS
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: LLM_API_KEY
+        sync: false
       - key: DEFAULT_TOP_K
         value: 4
       - key: MAX_FILES_PER_UPLOAD
         value: 5
       - key: MAX_UPLOAD_MB
         value: 20
+      - key: UPLOAD_DIR
+        value: data/uploads
+      - key: PROCESSED_DIR
+        value: data/processed
+      - key: CHROMA_PERSIST_DIR
+        value: data/vector_store
