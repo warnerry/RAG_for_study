@@ -1,0 +1,1183 @@
+:root {
+  color-scheme: dark;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #081018;
+  color: #f4f8fb;
+  --bg: #081018;
+  --panel: rgba(14, 25, 37, 0.84);
+  --panel-strong: rgba(19, 34, 49, 0.94);
+  --line: rgba(174, 203, 220, 0.18);
+  --muted: #9db0bf;
+  --text: #f4f8fb;
+  --cyan: #49d8e8;
+  --blue: #5aa8ff;
+  --violet: #a78bfa;
+  --pink: #f472b6;
+  --green: #4ade80;
+  --amber: #f7c56b;
+  --red: #fb7185;
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    linear-gradient(145deg, rgba(73, 216, 232, 0.14), transparent 34%),
+    linear-gradient(215deg, rgba(244, 114, 182, 0.13), transparent 31%),
+    linear-gradient(180deg, #0b1420 0%, #081018 46%, #0d1318 100%);
+}
+
+button,
+textarea,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.appShell {
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: 22px;
+}
+
+.topHeader,
+.heroSection,
+.workspaceGrid,
+.panel {
+  position: relative;
+}
+
+.topHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 34px;
+}
+
+.brand,
+.apiStatus,
+.heroPipeline,
+.panelHeaderLine,
+.buttonGrid,
+.panelActions,
+.trainingHeader,
+.cardKicker,
+.smallButton,
+.binaryActions,
+.qualityToggle {
+  display: flex;
+  align-items: center;
+}
+
+.brand {
+  gap: 12px;
+}
+
+.brandMark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--cyan);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.brand p,
+.eyebrow {
+  margin: 0;
+  color: var(--cyan);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.brand strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 15px;
+}
+
+.apiStatus,
+.successPill,
+.softPill,
+.dangerPill {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 11px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 13px;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.apiStatus.ok,
+.successPill {
+  border-color: rgba(74, 222, 128, 0.35);
+  color: #bcf7ce;
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.apiStatus.error,
+.dangerPill {
+  border-color: rgba(251, 113, 133, 0.4);
+  color: #fecdd3;
+  background: rgba(251, 113, 133, 0.1);
+}
+
+.heroSection {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  gap: 24px;
+  padding: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background:
+    linear-gradient(120deg, rgba(12, 28, 41, 0.96), rgba(13, 22, 35, 0.9)),
+    radial-gradient(circle at 70% 15%, rgba(73, 216, 232, 0.18), transparent 34%);
+  box-shadow: var(--shadow);
+}
+
+.heroSection::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(73, 216, 232, 0.7), rgba(244, 114, 182, 0.55), transparent);
+}
+
+.heroCopy h1 {
+  max-width: 860px;
+  margin: 12px 0 14px;
+  font-size: clamp(36px, 6vw, 72px);
+  line-height: 0.96;
+  letter-spacing: 0;
+}
+
+.heroLead {
+  max-width: 760px;
+  margin: 0;
+  color: #c8d6df;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.heroPipeline {
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.heroPipeline span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 9px 12px;
+  color: #dcebf2;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.scenarioGrid {
+  display: grid;
+  gap: 14px;
+}
+
+.scenarioCard {
+  min-height: 132px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.scenarioCard svg {
+  color: var(--cyan);
+}
+
+.scenarioCard span,
+.scenarioCard small {
+  display: block;
+}
+
+.scenarioCard span {
+  margin: 12px 0 7px;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.scenarioCard small {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.scenarioCard.active {
+  border-color: rgba(73, 216, 232, 0.52);
+  background: linear-gradient(135deg, rgba(73, 216, 232, 0.16), rgba(167, 139, 250, 0.1));
+}
+
+.workspaceGrid {
+  display: grid;
+  grid-template-columns: 390px minmax(0, 1fr);
+  gap: 22px;
+  margin-top: 22px;
+  align-items: start;
+}
+
+.leftColumn,
+.mainColumn {
+  display: grid;
+  gap: 16px;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 20px;
+  background: var(--panel);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(18px);
+}
+
+.panelHeaderLine {
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.panel h2,
+.panel h3 {
+  margin: 0;
+  letter-spacing: 0;
+}
+
+.panel h2 {
+  margin-top: 4px;
+  font-size: 24px;
+}
+
+.panel h3 {
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.panel p,
+.panel span,
+.panel small {
+  color: var(--muted);
+}
+
+.dropzone {
+  display: grid;
+  place-items: center;
+  min-height: 190px;
+  padding: 20px;
+  border: 1px dashed rgba(73, 216, 232, 0.42);
+  border-radius: 8px;
+  text-align: center;
+  background: rgba(73, 216, 232, 0.06);
+}
+
+.dropzone.dragging {
+  border-color: var(--green);
+  background: rgba(74, 222, 128, 0.08);
+}
+
+.dropzone input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.dropzone svg {
+  color: var(--cyan);
+}
+
+.dropzone strong {
+  margin-top: 10px;
+  color: var(--text);
+}
+
+.dropzone span {
+  max-width: 290px;
+  margin-top: 6px;
+  line-height: 1.45;
+}
+
+.pipelineSteps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.pipelineSteps span {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.pipelineSteps span.active {
+  color: var(--amber);
+  border-color: rgba(247, 197, 107, 0.42);
+}
+
+.pipelineSteps span.done {
+  color: #bcf7ce;
+  border-color: rgba(74, 222, 128, 0.38);
+}
+
+.processingBox {
+  display: grid;
+  gap: 12px;
+  margin: 14px 0;
+}
+
+.progressTrack {
+  height: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(73, 216, 232, 0.26);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.progressTrack span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--cyan), var(--green));
+  transition: width 0.28s ease;
+}
+
+.processingSteps {
+  display: grid;
+  gap: 8px;
+}
+
+.processingSteps div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.processingSteps div.done {
+  border-color: rgba(74, 222, 128, 0.32);
+  color: #bcf7ce;
+}
+
+.processingSteps div.done svg {
+  color: var(--green);
+}
+
+.buttonGrid,
+.panelActions {
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.primaryButton,
+.secondaryButton,
+.smallButton,
+.quickActions button,
+.segmentedControl button,
+.suggestionRow button,
+.binaryActions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.primaryButton {
+  border-color: rgba(73, 216, 232, 0.48);
+  background: linear-gradient(135deg, rgba(73, 216, 232, 0.92), rgba(90, 168, 255, 0.84));
+  color: #041019;
+  font-weight: 800;
+}
+
+.contestButton {
+  border-color: rgba(244, 114, 182, 0.5);
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.9), rgba(167, 139, 250, 0.82));
+}
+
+.documentMeta,
+.emptyPanel,
+.chatEmpty {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.documentMeta strong,
+.documentMeta span,
+.documentMeta small {
+  display: block;
+}
+
+.documentMeta strong {
+  color: var(--text);
+}
+
+.documentMeta span {
+  margin-top: 5px;
+}
+
+.documentMeta small {
+  margin-top: 8px;
+  color: #7f95a5;
+  word-break: break-all;
+}
+
+.fileList {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin: 12px 0 0;
+  list-style: none;
+}
+
+.fileList li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid rgba(174, 203, 220, 0.14);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.fileList li span {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.fileList li small {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.fileList.compact {
+  margin-top: 10px;
+}
+
+.technicalDetails {
+  margin-top: 12px;
+}
+
+.technicalDetails summary {
+  cursor: pointer;
+  color: #dbeaf2;
+  font-weight: 700;
+}
+
+.materialsSummary {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 16px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.materialsSummary > div {
+  display: grid;
+  gap: 4px;
+}
+
+.materialsSummary svg {
+  color: var(--cyan);
+}
+
+.materialsSummary strong {
+  color: var(--text);
+}
+
+.researchPanel p {
+  line-height: 1.55;
+}
+
+.tabBar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.tabBar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 13px;
+  color: var(--muted);
+  background: transparent;
+  white-space: nowrap;
+}
+
+.tabBar button.active {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.capabilityGrid,
+.questionGrid,
+.flashcardGrid,
+.stationGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.capabilityGrid div,
+.resultCard,
+.stationCard {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.capabilityGrid svg {
+  color: var(--cyan);
+}
+
+.capabilityGrid strong,
+.capabilityGrid span {
+  display: block;
+}
+
+.capabilityGrid strong {
+  margin-top: 10px;
+  color: var(--text);
+}
+
+.capabilityGrid span {
+  margin-top: 6px;
+  line-height: 1.45;
+}
+
+.quickActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.segmentedControl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.segmentedControl.contest {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.segmentedControl button.active {
+  color: #061118;
+  border-color: transparent;
+  background: var(--cyan);
+  font-weight: 800;
+}
+
+.qualityToggle {
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.countSelector {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.countSelector span {
+  margin-right: 4px;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.countSelector button {
+  min-width: 48px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.countSelector button.active {
+  color: #061118;
+  border-color: transparent;
+  background: var(--green);
+  font-weight: 800;
+}
+
+.resultStack {
+  display: grid;
+  gap: 12px;
+}
+
+.resultTitle {
+  margin-bottom: 2px;
+}
+
+.cleanList {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding-left: 20px;
+  color: #d5e4ed;
+  line-height: 1.5;
+}
+
+.resultCard p,
+.stationCard p {
+  line-height: 1.56;
+}
+
+.cardKicker {
+  gap: 7px;
+  margin-bottom: 10px;
+  color: var(--cyan);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.hintText,
+.mnemonicLine {
+  color: #d9c7ff;
+}
+
+.mnemonicDetails {
+  display: grid;
+  gap: 12px;
+  margin: 14px 0 0;
+}
+
+.mnemonicDetails div {
+  border-left: 3px solid rgba(73, 216, 232, 0.55);
+  padding-left: 10px;
+}
+
+.mnemonicDetails dt {
+  color: var(--cyan);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.mnemonicDetails dd {
+  margin: 5px 0 0;
+  color: #d5e4ed;
+  line-height: 1.5;
+}
+
+.flashcardTrainer {
+  display: grid;
+  gap: 14px;
+}
+
+.trainerTopline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.trainerTopline strong {
+  color: var(--text);
+}
+
+.trainerCard {
+  display: grid;
+  place-items: center;
+  gap: 16px;
+  width: min(560px, 100%);
+  min-height: 360px;
+  aspect-ratio: 1.28 / 1;
+  justify-self: center;
+  border: 1px solid rgba(73, 216, 232, 0.34);
+  border-radius: 8px;
+  padding: 28px;
+  text-align: center;
+  color: var(--text);
+  background: linear-gradient(135deg, rgba(73, 216, 232, 0.13), rgba(74, 222, 128, 0.08));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+}
+
+.trainerCard.flipped {
+  border-color: rgba(244, 114, 182, 0.35);
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.16), rgba(244, 114, 182, 0.1));
+}
+
+.trainerCard span {
+  color: var(--cyan);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.trainerCard strong {
+  max-width: 92%;
+  color: var(--text);
+  font-size: 24px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.trainerControls {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sourceToggle {
+  justify-self: center;
+  width: min(560px, 100%);
+  border: 1px solid rgba(174, 203, 220, 0.16);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.sourceToggle summary {
+  cursor: pointer;
+  color: #dbeaf2;
+  font-weight: 700;
+}
+
+.compactCardList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.compactCardList button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  color: var(--muted);
+  text-align: left;
+  background: rgba(255, 255, 255, 0.045);
+  overflow-wrap: anywhere;
+}
+
+.compactCardList button.active {
+  border-color: rgba(73, 216, 232, 0.45);
+  color: var(--text);
+  background: rgba(73, 216, 232, 0.1);
+}
+
+.compactCardList button span {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  color: #061118;
+  background: var(--cyan);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.flashcard button {
+  width: 100%;
+  min-height: 170px;
+  border: 1px solid rgba(73, 216, 232, 0.28);
+  border-radius: 8px;
+  padding: 18px;
+  text-align: left;
+  color: var(--text);
+  background: linear-gradient(135deg, rgba(73, 216, 232, 0.1), rgba(74, 222, 128, 0.07));
+}
+
+.flashcard.flipped button {
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.13), rgba(244, 114, 182, 0.09));
+}
+
+.flashcard button span,
+.flashcard button small {
+  display: block;
+}
+
+.flashcard button span {
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.flashcard button small {
+  margin-top: 16px;
+}
+
+.sourcesList {
+  display: grid;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.sourceItem,
+.sourceChip {
+  border: 1px solid rgba(174, 203, 220, 0.16);
+  border-radius: 8px;
+  padding: 9px 10px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.sourceItem summary {
+  cursor: pointer;
+  color: #dbeaf2;
+}
+
+.sourceItem summary span {
+  margin-left: 8px;
+  color: #7f95a5;
+  font-size: 12px;
+}
+
+.sourceItem p {
+  margin-bottom: 0;
+  color: #b9c9d4;
+}
+
+.sourceChip {
+  color: #b9c9d4;
+  font-size: 12px;
+}
+
+.suggestionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.conversation {
+  display: grid;
+  gap: 12px;
+  min-height: 280px;
+  max-height: 580px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.chatEmpty {
+  display: grid;
+  place-items: center;
+  min-height: 260px;
+  text-align: center;
+}
+
+.chatEmpty svg {
+  color: var(--green);
+}
+
+.chatEmpty strong,
+.chatEmpty span {
+  display: block;
+}
+
+.chatEmpty strong {
+  margin-top: 10px;
+  color: var(--text);
+}
+
+.chatEmpty span {
+  max-width: 440px;
+  margin-top: 6px;
+}
+
+.messageBubble {
+  width: min(780px, 92%);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.messageBubble.user {
+  justify-self: end;
+  border-color: rgba(73, 216, 232, 0.36);
+}
+
+.messageBubble.assistant {
+  justify-self: start;
+  border-color: rgba(74, 222, 128, 0.28);
+}
+
+.messageBubble p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.chatComposer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.18);
+  outline: none;
+}
+
+textarea:focus {
+  border-color: rgba(73, 216, 232, 0.58);
+}
+
+.stateBlock {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 13px;
+  margin: 12px 0;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.stateBlock strong,
+.stateBlock p {
+  margin: 0;
+}
+
+.stateBlock p {
+  margin-top: 4px;
+}
+
+.stateBlockError {
+  border-color: rgba(251, 113, 133, 0.34);
+}
+
+.stateBlockError svg {
+  color: var(--red);
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  border-top-color: var(--cyan);
+  border-radius: 999px;
+  animation: spin 0.9s linear infinite;
+}
+
+.spinIcon {
+  animation: spin 0.9s linear infinite;
+}
+
+.inlineLoading {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.trainingView {
+  display: grid;
+  gap: 14px;
+}
+
+.trainingHeader {
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.trainingHeader strong,
+.trainingHeader span {
+  display: block;
+}
+
+.timerBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(247, 197, 107, 0.4);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #fce7b2;
+  background: rgba(247, 197, 107, 0.09);
+  font-weight: 800;
+}
+
+.timerBadge.expired {
+  border-color: rgba(251, 113, 133, 0.42);
+  color: #fecdd3;
+}
+
+.binaryActions {
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.correctCard {
+  border-color: rgba(74, 222, 128, 0.36);
+}
+
+.wrongCard {
+  border-color: rgba(251, 113, 133, 0.38);
+}
+
+.answerReveal {
+  border-left: 3px solid var(--cyan);
+  padding-left: 10px;
+}
+
+.biathlonRoute {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-x: auto;
+}
+
+.stationMarker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 74px;
+  border: 1px solid rgba(244, 114, 182, 0.35);
+  border-radius: 8px;
+  padding: 10px;
+  color: #ffd7eb;
+  background: rgba(244, 114, 182, 0.08);
+}
+
+.stationQuestions {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.stationQuestions details,
+.questionCard details {
+  border: 1px solid rgba(174, 203, 220, 0.15);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.stationQuestions summary,
+.questionCard summary {
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 700;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1050px) {
+  .heroSection,
+  .workspaceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .scenarioGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .appShell {
+    padding: 14px;
+  }
+
+  .topHeader,
+  .panelHeaderLine,
+  .trainingHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .heroSection {
+    padding: 22px;
+  }
+
+  .heroCopy h1 {
+    font-size: 38px;
+  }
+
+  .scenarioGrid,
+  .capabilityGrid,
+  .questionGrid,
+  .flashcardGrid,
+  .compactCardList,
+  .stationGrid,
+  .segmentedControl,
+  .segmentedControl.contest,
+  .chatComposer {
+    grid-template-columns: 1fr;
+  }
+
+  .messageBubble {
+    width: 100%;
+  }
+}
