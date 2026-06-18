@@ -41,7 +41,7 @@ import {
 import { uploadAndProcessDocuments } from "./api/documents";
 import { generateStudy, listSavedResults, deleteSavedResult } from "./api/study";
 import { generateContest } from "./api/contest";
-import { askDocument } from "./api/chat";
+import { askDocument, getChatHistory, clearChatHistory } from "./api/chat";
 import { listMaterials, deleteMaterial, type MaterialRecord } from "./api/materials";
 import { apiLogin, apiRegister, apiUpdateName } from "./api/auth";
 import logoUrl from "./assets/logo/zachetka-logo.png";
@@ -2368,11 +2368,13 @@ interface ChatMessage {
 
 function ChatPage({
   session,
+  user,
   materials,
   onActivateMaterial,
   onNavigate,
 }: {
   session: SessionData | null;
+  user: AuthUser;
   materials: MaterialRecord[];
   onActivateMaterial: (mat: MaterialRecord) => void;
   onNavigate: (r: RouteId) => void;
@@ -2380,6 +2382,7 @@ function ChatPage({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [error, setError] = useState("");
   const [activeColl, setActiveColl] = useState<{ id: string; title: string } | null>(
     session ? { id: session.collectionId, title: session.documentTitle } : null
@@ -2392,6 +2395,18 @@ function ChatPage({
     }
   }, [session, activeColl]);
 
+  // Загружаем историю при смене материала
+  useEffect(() => {
+    if (!activeColl?.id) return;
+    setHistoryLoading(true);
+    getChatHistory(activeColl.id, user.token)
+      .then((hist) => {
+        setMessages(hist.map((m) => ({ role: m.role as "user" | "assistant", text: m.content })));
+      })
+      .catch(() => { setMessages([]); })
+      .finally(() => setHistoryLoading(false));
+  }, [activeColl?.id, user.token]);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -2400,12 +2415,17 @@ function ChatPage({
   const hasMaterials = materials.length > 0 || !!session;
 
   function handlePickMaterial(id: string, title: string) {
-    if (activeColl?.id !== id) {
-      setMessages([]);
-    }
     setActiveColl({ id, title });
     const mat = materials.find((m) => m.collection_id === id);
     if (mat) onActivateMaterial(mat);
+  }
+
+  async function handleClearHistory() {
+    if (!collId) return;
+    try {
+      await clearChatHistory(collId, user.token);
+      setMessages([]);
+    } catch {}
   }
 
   async function send() {
@@ -2416,7 +2436,7 @@ function ChatPage({
     setLoading(true);
     setError("");
     try {
-      const result = await askDocument(collId, text);
+      const result = await askDocument(collId, text, user.token);
       setMessages((m) => [...m, { role: "assistant", text: result.answer }]);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Ошибка.";
@@ -2454,6 +2474,17 @@ function ChatPage({
                 : "загрузи материал, чтобы начать"}
             </span>
           </div>
+          {messages.length > 0 && (
+            <button
+              className="btn btn--ghost"
+              style={{ marginLeft: "auto", fontSize: 13, opacity: 0.7 }}
+              onClick={handleClearHistory}
+              title="Очистить историю"
+            >
+              Очистить историю
+            </button>
+          )}
+          {historyLoading && <Loader2 size={16} className="spin" style={{ marginLeft: "auto" }} />}
         </div>
         <div className="chatMessages">
           {messages.length === 0 ? (
@@ -2986,7 +3017,7 @@ export default function App() {
       case "flashcards": return <StudyPage mode="flashcards" session={session} user={user} materials={materials} onNavigate={navigate} />;
       case "quiz": return <StudyPage mode="quiz" session={session} user={user} materials={materials} onNavigate={navigate} />;
       case "mnemonics": return <StudyPage mode="mnemonics" session={session} user={user} materials={materials} onNavigate={navigate} />;
-      case "chat": return <ChatPage session={session} materials={materials} onActivateMaterial={handleActivateMaterial} onNavigate={navigate} />;
+      case "chat": return <ChatPage session={session} user={user} materials={materials} onActivateMaterial={handleActivateMaterial} onNavigate={navigate} />;
       case "progress": return <ProgressPage session={session} onNavigate={navigate} />;
       case "calendar": return <CalendarPage session={session} onNavigate={navigate} />;
       case "settings": return <SettingsPage user={user} onUserUpdate={handleUserUpdate} />;

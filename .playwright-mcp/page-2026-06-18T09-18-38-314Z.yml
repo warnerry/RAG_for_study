@@ -1,0 +1,81 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - button "Логотип Зачётки" [ref=e5] [cursor=pointer]:
+      - img "Логотип Зачётки" [ref=e6]
+    - navigation [ref=e7]:
+      - link "Как это работает" [ref=e8] [cursor=pointer]:
+        - /url: "#how"
+      - link "Возможности" [ref=e9] [cursor=pointer]:
+        - /url: "#features"
+      - link "Для кого" [ref=e10] [cursor=pointer]:
+        - /url: "#goals"
+    - generic [ref=e11]:
+      - button "Войти" [ref=e12] [cursor=pointer]
+      - button "Начать бесплатно" [ref=e13] [cursor=pointer]
+  - main [ref=e14]:
+    - generic [ref=e15]:
+      - generic [ref=e16]: AI-ассистент для учёбы
+      - heading "Загрузи материалы — соберём подготовку за тебя" [level=1] [ref=e17]
+      - paragraph [ref=e18]: Превратим конспекты, методички и лекции в карточки, тесты, рифмы и планы. Ты экономишь время и получаешь максимум пользы.
+      - generic [ref=e19]:
+        - button "Попробовать бесплатно" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+          - text: Попробовать бесплатно
+        - button "Войти в аккаунт" [ref=e24] [cursor=pointer]
+      - generic [ref=e25]: Поддерживаем PDF, DOCX, PPTX, TXT и другие форматы
+    - generic [ref=e26]:
+      - img "Орка с зачёткой" [ref=e27]
+      - generic [ref=e28]:
+        - img [ref=e29]
+        - strong [ref=e32]: Экономия времени
+        - generic [ref=e33]: Подготовка за минуты
+      - generic [ref=e34]:
+        - img [ref=e35]
+        - strong [ref=e45]: Запоминается легко
+        - generic [ref=e46]: Карточки, тесты и рифмы
+      - generic [ref=e47]:
+        - img [ref=e48]
+        - strong [ref=e51]: Твой результат
+        - generic [ref=e52]: Выше уверенность
+  - generic [ref=e53]:
+    - generic [ref=e54]:
+      - heading "Как это работает" [level=2] [ref=e55]
+      - paragraph [ref=e56]: Три шага до готовой подготовки
+    - article [ref=e57]:
+      - img [ref=e58]
+      - strong [ref=e61]: 1. Загрузи материалы
+      - generic [ref=e62]: PDF, DOCX, PPTX, TXT — что угодно
+    - article [ref=e63]:
+      - img [ref=e64]
+      - strong [ref=e66]: 2. Зачётка анализирует
+      - generic [ref=e67]: Выделяем главное и создаём контент
+    - article [ref=e68]:
+      - img [ref=e69]
+      - strong [ref=e72]: 3. Тренируйся и сдавай
+      - generic [ref=e73]: Карточки, тесты, рифмы и чат
+  - generic [ref=e74]:
+    - heading "Почему выбирают Зачётку" [level=2] [ref=e76]
+    - article [ref=e77]:
+      - img [ref=e78]
+      - strong [ref=e80]: Точность
+      - generic [ref=e81]: AI выделяет ключевое из твоих материалов
+    - article [ref=e82]:
+      - img [ref=e83]
+      - strong [ref=e93]: Разные форматы
+      - generic [ref=e94]: Карточки, тесты, рифмы, планы
+    - article [ref=e95]:
+      - img [ref=e96]
+      - strong [ref=e100]: Персонализация
+      - generic [ref=e101]: Всё строится только на твоих файлах
+    - article [ref=e102]:
+      - img [ref=e103]
+      - strong [ref=e109]: Результат
+      - generic [ref=e110]: Ты сдаёшь уверенно — мы рядом
+  - generic [ref=e111]:
+    - heading "Загрузи материалы — соберём подготовку за тебя" [level=2] [ref=e112]
+    - paragraph [ref=e113]: Учись умнее, а не больше.
+    - button "Начать бесплатно" [ref=e114] [cursor=pointer]
+  - contentinfo [ref=e115]:
+    - button "Логотип Зачётки" [ref=e116] [cursor=pointer]:
+      - img "Логотип Зачётки" [ref=e117]
+    - paragraph [ref=e118]: © 2025 Зачётка. Все права защищены.

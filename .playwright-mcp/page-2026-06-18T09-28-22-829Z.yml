@@ -1,0 +1,129 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - button "Логотип Зачётки Зачётка от конспекта до конкурса" [ref=e5] [cursor=pointer]:
+      - img "Логотип Зачётки" [ref=e6]
+      - generic [ref=e7]:
+        - strong [ref=e8]: Зачётка
+        - generic [ref=e9]: от конспекта до конкурса
+    - button "Загрузить материалы" [ref=e10] [cursor=pointer]:
+      - img [ref=e11]
+      - text: Загрузить материалы
+    - navigation "Основная навигация" [ref=e12]:
+      - button "Дашборд" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e17]: Дашборд
+      - button "Мои материалы" [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+        - generic [ref=e22]: Мои материалы
+      - button "Темы" [ref=e23] [cursor=pointer]:
+        - img [ref=e24]
+        - generic [ref=e28]: Темы
+      - button "Краткий пересказ" [ref=e29] [cursor=pointer]:
+        - img [ref=e30]
+        - generic [ref=e32]: Краткий пересказ
+      - button "Карточки" [ref=e33] [cursor=pointer]:
+        - img [ref=e34]
+        - generic [ref=e37]: Карточки
+      - button "Тесты" [ref=e38] [cursor=pointer]:
+        - img [ref=e39]
+        - generic [ref=e43]: Тесты
+      - button "Мнемоники и рифмы" [ref=e44] [cursor=pointer]:
+        - img [ref=e45]
+        - generic [ref=e55]: Мнемоники и рифмы
+      - button "2к1 — конкурс" [ref=e56] [cursor=pointer]:
+        - img [ref=e57]
+        - generic [ref=e63]: 2к1 — конкурс
+      - button "Косатик — чат" [ref=e64] [cursor=pointer]:
+        - img [ref=e65]
+        - generic [ref=e67]: Косатик — чат
+      - button "Прогресс" [ref=e68] [cursor=pointer]:
+        - img [ref=e69]
+        - generic [ref=e71]: Прогресс
+      - button "Календарь" [ref=e72] [cursor=pointer]:
+        - img [ref=e73]
+        - generic [ref=e75]: Календарь
+      - button "Настройки" [ref=e76] [cursor=pointer]:
+        - img [ref=e77]
+        - generic [ref=e80]: Настройки
+      - button "Профиль" [ref=e81] [cursor=pointer]:
+        - img [ref=e82]
+        - generic [ref=e85]: Профиль
+    - generic [ref=e86]:
+      - strong [ref=e87]: Материалы загружены ✓
+      - paragraph [ref=e88]: Продолжай подготовку — карточки, тесты и чат уже готовы.
+      - button "Продолжить" [ref=e89] [cursor=pointer]
+      - img "Орка Зачётки" [ref=e90]
+  - generic [ref=e91]:
+    - banner [ref=e92]:
+      - button "Открыть меню" [ref=e93] [cursor=pointer]:
+        - img [ref=e94]
+      - generic [ref=e95]:
+        - img [ref=e96]
+        - textbox "Поиск" [ref=e99]:
+          - /placeholder: Поиск по темам, материалам, тестам...
+        - generic [ref=e100]: ⌘K
+      - generic [ref=e101]:
+        - button "Уведомления" [ref=e103] [cursor=pointer]:
+          - img [ref=e104]
+        - button "Денис" [ref=e107] [cursor=pointer]:
+          - generic [ref=e108]: ДЕ
+          - generic [ref=e109]: Денис
+          - img [ref=e110]
+    - generic [ref=e113]:
+      - generic [ref=e115]:
+        - heading "Привет, Денис! 👋" [level=1] [ref=e116]
+        - paragraph [ref=e117]: Твои материалы обработаны — продолжай подготовку.
+      - generic [ref=e118]:
+        - generic [ref=e119]:
+          - heading "Загруженные материалы" [level=2] [ref=e120]
+          - button "Все материалы" [ref=e121] [cursor=pointer]:
+            - text: Все материалы
+            - img [ref=e122]
+        - generic [ref=e124]:
+          - generic [ref=e125]:
+            - generic [ref=e126]:
+              - img [ref=e127]
+              - text: PDF
+            - generic [ref=e130]: лекция_по_ИИ.pdf
+            - generic [ref=e131]: Обработан
+            - generic [ref=e132]: 18 фр.
+          - generic [ref=e133]:
+            - generic [ref=e134]:
+              - img [ref=e135]
+              - text: DOCX
+            - generic [ref=e138]: методические_указания.docx
+            - generic [ref=e139]: Обработан
+            - generic [ref=e140]: 11 фр.
+      - generic [ref=e141]:
+        - button "Карточки Термины и определения" [ref=e142] [cursor=pointer]:
+          - generic [ref=e143]:
+            - strong [ref=e144]: Карточки
+            - text: Термины и определения
+          - img [ref=e145]
+        - button "Тесты Проверь себя" [ref=e148] [cursor=pointer]:
+          - generic [ref=e149]:
+            - strong [ref=e150]: Тесты
+            - text: Проверь себя
+          - img [ref=e151]
+        - button "Краткий пересказ Суть материала кратко" [ref=e155] [cursor=pointer]:
+          - generic [ref=e156]:
+            - strong [ref=e157]: Краткий пересказ
+            - text: Суть материала кратко
+          - img [ref=e158]
+        - button "Мнемоники Запомни легко" [ref=e160] [cursor=pointer]:
+          - generic [ref=e161]:
+            - strong [ref=e162]: Мнемоники
+            - text: Запомни легко
+          - img [ref=e163]
+        - button "2к1 Тренировка конкурса" [ref=e173] [cursor=pointer]:
+          - generic [ref=e174]:
+            - strong [ref=e175]: 2к1
+            - text: Тренировка конкурса
+          - img [ref=e176]
+        - button "Косатик — чат Задай вопрос по материалу" [ref=e182] [cursor=pointer]:
+          - generic [ref=e183]:
+            - strong [ref=e184]: Косатик — чат
+            - text: Задай вопрос по материалу
+          - img [ref=e185]
+  - button "Открыть чат с Косатиком" [ref=e188] [cursor=pointer]:
+    - img "Косатик" [ref=e189]

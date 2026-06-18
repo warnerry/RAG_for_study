@@ -6,6 +6,7 @@ class ChatRequest(BaseModel):
     document_id: str | None = None
     message: str
     top_k: int | None = Field(default=None, ge=1, le=12)
+    token: str | None = None
 
 
 class Source(BaseModel):
@@ -18,3 +19,10 @@ class Source(BaseModel):
 class ChatResponse(BaseModel):
     answer: str
     sources: list[Source]
+
+
+class ChatHistoryMessage(BaseModel):
+    id: str
+    role: str
+    content: str
+    created_at: str
