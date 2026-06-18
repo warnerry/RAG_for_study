@@ -12,7 +12,7 @@ import jwt
 
 from app.core.config import get_settings
 
-_SECRET = os.environ.get("JWT_SECRET", "zachetka-secret-key-2024-please-change-in-prod")
+_SECRET = os.environ.get("JWT_SECRET", "zachetka-secret-key-2024-please-change")
 _ALGO = "HS256"
 _TTL_HOURS = 720
 

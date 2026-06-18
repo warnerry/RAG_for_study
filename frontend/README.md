@@ -18,9 +18,9 @@ npm run dev
 VITE_API_BASE_URL=http://localhost:8000
 ```
 
-Для Vercel или Netlify укажи `VITE_API_BASE_URL` адресом backend на Render. Если frontend отдается самим FastAPI по `/ui/`, переменная не нужна.
+Если frontend отдается самим FastAPI по `/ui/`, переменная не нужна.
 
-## Production build
+## Локальная сборка
 
 ```bash
 cd /Users/denis/Программирование/RAG_for_study/frontend
