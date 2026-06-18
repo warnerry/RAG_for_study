@@ -11,6 +11,9 @@ class ContestGenerateRequest(BaseModel):
     document_id: str | None = None
     mode: ContestMode
     quality: bool = False
+    count: int = 10
+    token: str | None = None
+    document_title: str | None = None
 
 
 class ContestGenerateResponse(BaseModel):
@@ -19,3 +22,6 @@ class ContestGenerateResponse(BaseModel):
     mistake_limit: int | None = None
     questions: list[dict[str, Any]] | None = None
     stations: list[dict[str, Any]] | None = None
+    result_id: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None

@@ -165,6 +165,26 @@ h2 { font-size: clamp(16px, 2.5vw, 20px); }
 .searchBox kbd { font-size: 12px; padding: 2px 6px; border-radius: 6px; background: rgba(255,255,255,.08); color: #b0aed4; flex-shrink: 0; }
 .topbarProfile { display: flex; align-items: center; gap: 10px; margin-left: auto; position: relative; }
 
+/* User avatar (initials) */
+.userAvatar {
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%; font-weight: 700; color: #fff; flex-shrink: 0;
+  letter-spacing: -.02em;
+}
+
+/* Notifications */
+.notifWrap { position: relative; }
+.notifDropdown {
+  position: absolute; top: calc(100% + 10px); right: 0; width: 260px;
+  padding: 16px; z-index: 200;
+}
+.notifTitle { font-weight: 700; font-size: 14px; margin: 0 0 12px; }
+.notifEmpty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 0; color: var(--muted); }
+.notifEmpty p { margin: 0; font-size: 13px; }
+
+/* Desktop-only: backdrop must not appear on screens > 900px */
+@media (min-width: 901px) { .mobileOnly { display: none !important; } }
+
 /* ─── Buttons ────────────────────────────────────────────────────────────── */
 .zButton {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -513,7 +533,7 @@ h2 { font-size: clamp(16px, 2.5vw, 20px); }
 .fileListChunks { color: var(--muted); font-size: 12px; white-space: nowrap; }
 
 .quickGrid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
 }
 .quickCard {
   min-height: 110px; border-radius: var(--radius); padding: 18px;
@@ -622,7 +642,7 @@ h2 { font-size: clamp(16px, 2.5vw, 20px); }
 .studyPage { display: flex; flex-direction: column; gap: 20px; }
 
 /* Flashcards */
-.flashcardLayout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+.flashcardLayout { display: flex; flex-direction: column; gap: 20px; max-width: 720px; margin: 0 auto; }
 .cardMeta { display: grid; gap: 8px; margin-bottom: 8px; }
 .cardMeta span { font-size: 13px; color: var(--muted); }
 
@@ -650,7 +670,7 @@ h2 { font-size: clamp(16px, 2.5vw, 20px); }
   margin-top: 56px; font-size: clamp(22px, 3.5vw, 40px); line-height: 1.3;
   overflow-wrap: break-word; word-break: break-word;
 }
-.trainerFace--front { transform: rotate(-6deg); }
+.trainerFace--front { }
 .cardDecorIcon { position: absolute; right: 48px; bottom: 36px; color: rgba(150,126,255,.32); }
 .cardHint { position: absolute; left: 48px; bottom: 28px; color: var(--muted); font-size: 13px; }
 .trainerFace--back { transform: rotateY(180deg); }
@@ -727,31 +747,49 @@ kbd { padding: 3px 8px; border-radius: var(--radius-xs); background: rgba(255,25
 .summarySection li { margin-bottom: 4px; overflow-wrap: break-word; word-break: break-word; }
 
 /* ─── Chat ───────────────────────────────────────────────────────────────── */
-.chatPage { display: flex; flex-direction: column; gap: 20px; }
-.chatLayout { padding: 0; display: flex; flex-direction: column; min-height: 500px; max-height: 70vh; }
-.chatMessages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
-.chatEmpty { display: grid; place-items: center; gap: 10px; flex: 1; color: var(--muted); text-align: center; }
-.chatEmpty svg { opacity: .4; }
+.chatPage { display: flex; flex-direction: column; gap: 12px; }
+.chatLayout {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 160px);
+  min-height: 480px;
+  overflow: hidden;
+}
+.chatMessengerHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--glass);
+}
+.chatMessages { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+.chatEmpty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; flex: 1; color: var(--muted); text-align: center; padding: 20px; }
 .chatEmpty p { margin: 0; }
 .chatEmptyHint { font-size: 12px !important; color: var(--faint) !important; }
-.chatMsg { display: flex; gap: 10px; align-items: flex-start; max-width: 88%; }
-.chatMsg p { margin: 0; padding: 12px 16px; border-radius: var(--radius-sm); font-size: 14px; line-height: 1.6; overflow-wrap: break-word; word-break: break-word; }
+.chatMsg { display: flex; gap: 10px; align-items: flex-end; max-width: 80%; }
+.chatMsg p { margin: 0; padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.6; overflow-wrap: break-word; word-break: break-word; }
 .chatMsg--user  { align-self: flex-end; flex-direction: row-reverse; }
-.chatMsg--user p { background: linear-gradient(135deg, rgba(164,86,255,.5), rgba(57,209,238,.3)); border: 1px solid var(--line2); }
-.chatMsg--assistant p { background: rgba(14,22,50,.72); border: 1px solid var(--line); }
-.chatMsg--assistant > svg { color: var(--cyan); flex-shrink: 0; margin-top: 14px; }
+.chatMsg--user p { background: var(--violet2); color: #fff; border-bottom-right-radius: 4px; }
+.chatMsg--assistant { align-self: flex-start; }
+.chatMsg--assistant p { background: var(--bg2); border: 1px solid var(--border); color: var(--text1); border-bottom-left-radius: 4px; }
+.chatOrcaAvatar { width: 30px; height: 30px; object-fit: contain; border-radius: 50%; flex-shrink: 0; }
 .chatInput {
-  display: flex; gap: 10px; padding: 14px 20px;
-  border-top: 1px solid var(--line);
+  display: flex; gap: 10px; padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--glass);
 }
 .chatInput textarea {
-  flex: 1; border: 1px solid var(--line); border-radius: var(--radius-sm);
-  background: rgba(8,14,32,.72); padding: 10px 14px; resize: none;
+  flex: 1; border: 1px solid var(--border); border-radius: 20px;
+  background: var(--bg2); padding: 10px 16px; resize: none;
   font-size: 14px; line-height: 1.5; min-width: 0;
-  transition: border-color .18s;
+  transition: border-color .18s; color: var(--text1);
 }
-.chatInput textarea:focus { outline: 0; border-color: var(--line2); }
-.chatInput .zButton { align-self: flex-end; }
+.chatInput textarea:focus { outline: 0; border-color: var(--violet2); }
+.chatInput .zButton { align-self: flex-end; border-radius: 50%; width: 42px; height: 42px; padding: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
 /* ─── Progress / Calendar ────────────────────────────────────────────────── */
 .progressHint { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
@@ -761,6 +799,48 @@ kbd { padding: 3px 8px; border-radius: var(--radius-xs); background: rgba(255,25
 .progressHint p { margin: 0; font-size: 13px; }
 
 /* ─── Settings ───────────────────────────────────────────────────────────── */
+/* Avatar editor */
+.avatarEditor { display: flex; gap: 20px; align-items: flex-start; }
+.avatarPreview {
+  width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center; font-weight: 700; font-size: 26px;
+  color: #fff; letter-spacing: -.02em;
+}
+.settingsHint { font-size: 12px; color: var(--muted); margin: 0 0 10px; }
+.avatarColorPicker { display: flex; gap: 8px; flex-wrap: wrap; }
+.avatarColorSwatch {
+  width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent;
+  cursor: pointer; transition: transform .15s, border-color .15s;
+}
+.avatarColorSwatch:hover { transform: scale(1.15); }
+.avatarColorSwatch.isActive { border-color: #fff; transform: scale(1.15); }
+
+/* Chat orca avatar */
+.chatOrcaAvatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex-shrink: 0; margin-top: 10px; filter: drop-shadow(0 0 6px rgba(40,200,234,.3)); }
+
+/* Contest 2к1 */
+.contestCard { padding: 28px; display: flex; flex-direction: column; gap: 20px; max-width: 680px; }
+.contestStatement { font-size: 18px; font-weight: 600; line-height: 1.5; margin: 0; overflow-wrap: break-word; }
+.contestButtons { display: flex; gap: 14px; }
+.contestBtn {
+  flex: 1; min-height: 52px; border-radius: var(--radius-sm); font-weight: 700; font-size: 16px;
+  border: 2px solid var(--line); cursor: pointer; transition: all .2s;
+}
+.contestBtn--true { background: rgba(5,150,105,.18); color: #34d399; border-color: rgba(52,211,153,.3); }
+.contestBtn--false { background: rgba(220,38,38,.14); color: #f87171; border-color: rgba(248,113,113,.3); }
+.contestBtn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.15); }
+.contestBtn:disabled { opacity: .6; cursor: not-allowed; }
+.contestBtn.isCorrect { border-color: #34d399; box-shadow: 0 0 14px rgba(52,211,153,.35); }
+.contestBtn.isWrong   { border-color: #f87171; box-shadow: 0 0 14px rgba(248,113,113,.3); }
+.contestFeedback { display: flex; flex-direction: column; gap: 10px; }
+.contestFeedback.isCorrect p { color: #34d399; }
+.contestFeedback.isWrong   p { color: #f87171; }
+.contestFeedback p { margin: 0; font-weight: 600; font-size: 15px; }
+.contestExplanation { color: var(--muted) !important; font-weight: 400 !important; font-size: 13px !important; }
+.contestResult { padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; max-width: 480px; }
+.contestResult h2 { margin: 0; }
+.contestResult p { margin: 0; color: var(--muted); }
+
 .settingsGrid { display: grid; gap: 20px; max-width: 560px; }
 .settingsForm  { display: grid; gap: 14px; }
 .settingsField { display: grid; gap: 6px; }
@@ -810,7 +890,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   .topbar { flex-wrap: wrap; }
   .searchBox { order: 3; flex-basis: 100%; max-width: 100%; }
   .twoCol { grid-template-columns: 1fr; }
-  .flashcardLayout { grid-template-columns: 1fr; }
+  .flashcardLayout { max-width: 100%; }
   .cardControls { grid-template-columns: 1fr; }
   .trainerCard { width: 100%; margin: 16px 0; }
   .trainerFace { padding: 30px 28px; }
@@ -840,6 +920,456 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   .fileRow .fileRowSize { display: none; }
   .profileName { display: none; }
 }
+
+/* ─── Material picker ─────────────────────────────────────────────────────── */
+.materialPickerRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.materialPickerLabel { font-size: 13px; color: var(--text2); white-space: nowrap; }
+.materialPickerSelect {
+  flex: 1;
+  min-width: 200px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text1);
+  font-size: 14px;
+  cursor: pointer;
+}
+.materialPickerSelect:focus { outline: 2px solid var(--violet2); outline-offset: 2px; }
+
+/* ─── Count selector ──────────────────────────────────────────────────────── */
+.countSelector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.countSelectorLabel { font-size: 13px; color: var(--text2); white-space: nowrap; }
+.countSelectorControls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.countBtn {
+  padding: 5px 10px;
+  font-size: 16px;
+  line-height: 1;
+  background: transparent;
+  border: none;
+  color: var(--text1);
+  cursor: pointer;
+  transition: background .15s;
+}
+.countBtn:hover:not(:disabled) { background: var(--glass-hover); }
+.countBtn:disabled { color: var(--text3); cursor: default; }
+.countSelectorValue {
+  min-width: 28px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text1);
+  padding: 0 4px;
+}
+
+/* ─── Materials library ───────────────────────────────────────────────────── */
+.materialLibrary {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+.materialLibCard {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  transition: border-color .2s;
+}
+.materialLibCard.isActive { border-color: var(--violet2); }
+.materialLibActiveBadge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--violet2);
+  background: rgba(124,58,237,.12);
+  padding: 3px 8px;
+  border-radius: 20px;
+  letter-spacing: .03em;
+}
+.materialLibCardHeader { display: flex; flex-direction: column; gap: 4px; }
+.materialLibTitle {
+  font-size: 16px; font-weight: 700; color: var(--text1);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  padding-right: 52px; /* room for the Активный badge */
+}
+.materialLibDate { font-size: 12px; color: var(--text3); }
+.materialLibFiles { display: flex; flex-direction: column; gap: 8px; margin-top: 2px; }
+.materialLibFile {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.materialLibFileName {
+  font-size: 13px; color: var(--text2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  min-width: 0;
+}
+.materialLibChunks { font-size: 12px; color: var(--text3); white-space: nowrap; flex-shrink: 0; }
+.materialLibActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+/* ─── Chat messenger header (inside chatLayout) ───────────────────────────── */
+.chatMessengerAvatar {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.chatMessengerInfo { display: flex; flex-direction: column; gap: 1px; }
+.chatMessengerInfo strong { font-size: 15px; font-weight: 700; color: var(--text1); }
+.chatMessengerInfo span { font-size: 12px; color: var(--text3); }
+
+/* ─── Floating Косатик widget ─────────────────────────────────────────────── */
+.floatingChat {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+/* Suggestion bubble */
+.floatingBubble {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  max-width: 280px;
+  animation: bubbleIn .35s cubic-bezier(.22,1,.36,1);
+  position: relative;
+}
+@keyframes bubbleIn {
+  from { opacity: 0; transform: translateY(16px) scale(.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.floatingBubbleClose {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  line-height: 1;
+}
+.floatingBubbleClose:hover { color: var(--text1); }
+.floatingBubbleOrca {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.floatingBubbleContent { display: flex; flex-direction: column; gap: 8px; padding-right: 16px; }
+.floatingBubbleText { font-size: 13px; color: var(--text1); margin: 0; line-height: 1.4; }
+.floatingBubbleBtn {
+  background: var(--violet2);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background .15s;
+}
+.floatingBubbleBtn:hover { background: var(--violet3, #6d28d9); }
+
+.floatingChatPanel {
+  width: 320px;
+  max-height: 440px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,.25);
+}
+.floatingChatHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.floatingChatHeader img { width: 32px; height: 32px; object-fit: contain; border-radius: 50%; }
+.floatingChatHeader > div { flex: 1; }
+.floatingChatHeader strong { display: block; font-size: 14px; color: var(--text1); }
+.floatingChatHeader span { font-size: 11px; color: var(--text3); }
+.floatingChatClose {
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+}
+.floatingChatClose:hover { color: var(--text1); background: var(--glass-hover); }
+
+.floatingChatMessages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+.floatingChatEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  text-align: center;
+}
+.floatingChatEmpty img { width: 40px; opacity: .7; }
+.floatingChatEmpty p { font-size: 13px; color: var(--text3); }
+
+.floatingChatMsg {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.floatingChatMsg.fcUser { flex-direction: row-reverse; }
+.floatingChatMsg p {
+  max-width: 220px;
+  font-size: 13px;
+  padding: 8px 11px;
+  border-radius: 12px;
+  line-height: 1.45;
+}
+.floatingChatMsg.fcUser p { background: var(--violet2); color: #fff; border-bottom-right-radius: 4px; }
+.floatingChatMsg.fcAssistant p { background: var(--bg2); color: var(--text1); border-bottom-left-radius: 4px; }
+.fcAvatar { width: 24px; height: 24px; object-fit: contain; border-radius: 50%; flex-shrink: 0; margin-top: 2px; }
+
+.floatingChatInput {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.floatingChatInput textarea {
+  flex: 1;
+  resize: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  background: var(--bg2);
+  color: var(--text1);
+  line-height: 1.4;
+}
+.floatingChatInput textarea:focus { outline: 2px solid var(--violet2); outline-offset: 2px; }
+.floatingChatInput button {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--violet2);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background .15s;
+}
+.floatingChatInput button:hover:not(:disabled) { background: var(--violet3, #6d28d9); }
+.floatingChatInput button:disabled { opacity: .45; cursor: default; }
+
+/* ─── Multi-material picker ─────────────────────────────────────────────── */
+.multiPickerRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: rgba(8,14,36,.6);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.multiPickerChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.multiPickerChip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--line2);
+  background: rgba(20,28,64,.7);
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.multiPickerChip:hover { background: rgba(140,100,255,.15); border-color: var(--violet2); color: var(--text1); }
+.multiPickerChip.isSelected { background: rgba(124,58,237,.22); border-color: var(--violet2); color: #ece8ff; }
+.multiPickerChip.multiPickerAll { background: transparent; border-style: dashed; color: var(--muted); }
+.multiPickerChip.multiPickerAll:hover { color: var(--text1); border-color: var(--line2); }
+
+/* ─── Contest TTS & countdown ───────────────────────────────────────────── */
+.contestReading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-radius: var(--radius-sm);
+  background: rgba(57,198,232,.08);
+  border: 1px solid rgba(57,198,232,.2);
+  color: var(--cyan);
+  font-size: 14px;
+  margin: 12px 0;
+}
+.contestCountdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 20px;
+}
+.contestCountdownNum {
+  font-size: 72px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--violet2);
+  animation: pulse .9s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: .85; }
+}
+.contestCountdownLabel { font-size: 14px; color: var(--muted); }
+
+/* ─── Processing action screen ───────────────────────────────────────────── */
+.processingActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 24px 0 16px;
+}
+.processingActionBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line2);
+  background: rgba(140, 100, 255, .14);
+  color: var(--text1);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .18s, border-color .18s;
+}
+.processingActionBtn:hover { background: rgba(140, 100, 255, .28); border-color: var(--violet2); }
+.processingSecondary {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-top: 8px;
+}
+.processingSecondary:hover { color: var(--text1); }
+
+/* ─── Profile page ───────────────────────────────────────────────────────── */
+.profileHero {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 28px 32px;
+  flex-wrap: wrap;
+}
+.profileHeroInfo { flex: 1; min-width: 0; }
+.profileHeroInfo h2 { margin: 0 0 4px; font-size: 22px; overflow-wrap: break-word; }
+.profileHeroInfo .profileEmail { color: var(--muted); font-size: 14px; margin: 0; }
+.profileStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 20px;
+}
+@media (max-width: 640px) { .profileStats { grid-template-columns: 1fr 1fr; } }
+.profileStatCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 16px;
+  text-align: center;
+}
+.profileStatNum {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--violet);
+  line-height: 1;
+}
+.profileStatLabel { font-size: 13px; color: var(--muted); }
+.profileCurrentMaterial {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 28px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.profileCurrentInfo { flex: 1; min-width: 0; }
+.profileCurrentInfo strong { font-size: 15px; }
+.profileCurrentInfo p { margin: 4px 0 2px; overflow-wrap: break-word; }
+.profileCurrentInfo .mutedText { font-size: 13px; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

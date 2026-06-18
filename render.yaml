@@ -2,20 +2,27 @@ services:
   - type: web
     name: zachetka-backend
     env: python
+    region: frankfurt
+    plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
     envVars:
       - key: APP_ENV
         value: production
       - key: PUBLIC_DEMO_MODE
-        value: true
+        value: false
       - key: CORS_ORIGINS
-        sync: false
+        sync: false          # Set in Render dashboard: https://your-app.vercel.app
       - key: JWT_SECRET
-        sync: false
+        generateValue: true  # Render auto-generates a secure secret
       - key: LLM_API_KEY
-        sync: false
+        sync: false          # Set in Render dashboard: your Caila API key
+      - key: LLM_BASE_URL
+        value: https://caila.io/api/adapters/openai
+      - key: LLM_MODEL
+        value: gpt-4o-mini
       - key: DEFAULT_TOP_K
         value: 4
       - key: MAX_FILES_PER_UPLOAD
@@ -23,8 +30,8 @@ services:
       - key: MAX_UPLOAD_MB
         value: 20
       - key: UPLOAD_DIR
-        value: data/uploads
+        value: /tmp/data/uploads
       - key: PROCESSED_DIR
-        value: data/processed
+        value: /tmp/data/processed
       - key: CHROMA_PERSIST_DIR
-        value: data/vector_store
+        value: /tmp/data/vector_store

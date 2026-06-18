@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Bell,
   BookOpen,
   Brain,
   CalendarDays,
@@ -33,7 +32,6 @@ import {
   Send,
   Settings,
   Sparkles,
-  Star,
   Target,
   Trophy,
   Upload,
@@ -42,7 +40,9 @@ import {
 } from "lucide-react";
 import { uploadAndProcessDocuments } from "./api/documents";
 import { generateStudy, listSavedResults, deleteSavedResult } from "./api/study";
+import { generateContest } from "./api/contest";
 import { askDocument } from "./api/chat";
+import { listMaterials, deleteMaterial, type MaterialRecord } from "./api/materials";
 import { apiLogin, apiRegister, apiUpdateName } from "./api/auth";
 import logoUrl from "./assets/logo/zachetka-logo.png";
 import orcaBadgeUrl from "./assets/illustrations/orca-badge.png";
@@ -50,6 +50,8 @@ import orcaFloatUrl from "./assets/illustrations/orca-float.png";
 import orcaHeroUrl from "./assets/illustrations/orca-hero.png";
 import orcaMiniUrl from "./assets/illustrations/orca-mini.png";
 import orcaSideUrl from "./assets/illustrations/orca-side.png";
+import orcaAstronautUrl from "./assets/illustrations/orca-astronaut.webp";
+import orcaPixelUrl from "./assets/illustrations/orca-pixel.webp";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -69,6 +71,7 @@ type RouteId =
   | "progress"
   | "calendar"
   | "summary"
+  | "contest"
   | "settings"
   | "profile";
 
@@ -114,7 +117,13 @@ function saveAuth(user: AuthUser | null): void {
 function loadSession(): SessionData | null {
   try {
     const raw = localStorage.getItem(SESSION_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const data = JSON.parse(raw) as Partial<SessionData>;
+    if (!data.documentTitle && data.files?.length) {
+      data.documentTitle = data.files[0].filename.replace(/\.[^.]+$/, "");
+    }
+    data.documentTitle = data.documentTitle ?? "Материал";
+    return data as SessionData;
   } catch {
     return null;
   }
@@ -136,7 +145,7 @@ function routeFromLocation(): RouteId {
   const path = window.location.pathname.replace(/^\/+|\/+$/g, "") as RouteId;
   const known: RouteId[] = [
     "landing", "login", "register", "dashboard", "upload", "processing",
-    "materials", "topics", "summary", "flashcards", "quiz", "mnemonics", "chat",
+    "materials", "topics", "summary", "flashcards", "quiz", "mnemonics", "contest", "chat",
     "progress", "calendar", "settings", "profile",
   ];
   return known.includes(path) ? path : "landing";
@@ -332,12 +341,28 @@ const NAV_ITEMS = [
   { id: "flashcards" as RouteId, label: "Карточки", icon: LibraryBig },
   { id: "quiz" as RouteId, label: "Тесты", icon: ClipboardCheck },
   { id: "mnemonics" as RouteId, label: "Мнемоники и рифмы", icon: Brain },
-  { id: "chat" as RouteId, label: "Чат по материалам", icon: MessageCircle },
+  { id: "contest" as RouteId, label: "2к1 — конкурс", icon: Trophy },
+  { id: "chat" as RouteId, label: "Косатик — чат", icon: MessageCircle },
   { id: "progress" as RouteId, label: "Прогресс", icon: Grid2X2 },
   { id: "calendar" as RouteId, label: "Календарь", icon: CalendarDays },
   { id: "settings" as RouteId, label: "Настройки", icon: Settings },
   { id: "profile" as RouteId, label: "Профиль", icon: User },
 ];
+
+function UserAvatar({ user, size = 32 }: { user: AuthUser; size?: number }) {
+  const initials = (user.name || user.email).slice(0, 2).toUpperCase();
+  const colors = ["#7c3aed", "#0891b2", "#059669", "#d97706", "#dc2626", "#7c3aed"];
+  const color = colors[(user.email.charCodeAt(0) + user.email.charCodeAt(1)) % colors.length];
+  return (
+    <span
+      className="userAvatar"
+      style={{ width: size, height: size, background: color, fontSize: size * 0.38 }}
+      aria-hidden
+    >
+      {initials}
+    </span>
+  );
+}
 
 function Topbar({
   user,
@@ -352,6 +377,7 @@ function Topbar({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setMenuOpen(false);
@@ -371,38 +397,23 @@ function Topbar({
         <kbd>⌘K</kbd>
       </label>
       <div className="topbarProfile" ref={ref}>
-        <IconBtn label="Уведомления" className="notificationButton">
-          <Bell size={21} />
-        </IconBtn>
         <button
           className="profileButton"
           type="button"
           onClick={() => setMenuOpen((v) => !v)}
           aria-expanded={menuOpen}
         >
-          <User size={20} className="profileIcon" />
+          <UserAvatar user={user} size={30} />
           <span className="profileName">{displayName(user)}</span>
           <ChevronDown size={16} />
         </button>
         {menuOpen ? (
           <div className="profileDropdown">
             <p className="profileEmail">{user.email}</p>
-            <button
-              type="button"
-              onClick={() => {
-                setMenuOpen(false);
-                onNavigate("profile");
-              }}
-            >
+            <button type="button" onClick={() => { setMenuOpen(false); onNavigate("profile"); }}>
               <User size={16} /> Профиль
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMenuOpen(false);
-                onNavigate("settings");
-              }}
-            >
+            <button type="button" onClick={() => { setMenuOpen(false); onNavigate("settings"); }}>
               <Settings size={16} /> Настройки
             </button>
             <hr />
@@ -481,7 +492,7 @@ function Sidebar({
         )}
       </aside>
       {open ? (
-        <button className="sidebarBackdrop" aria-label="Закрыть меню" type="button" onClick={onClose} />
+        <button className="sidebarBackdrop mobileOnly" aria-label="Закрыть меню" type="button" onClick={onClose} />
       ) : null}
     </>
   );
@@ -493,6 +504,7 @@ function AppLayout({
   route,
   user,
   hasSession,
+  session,
   onNavigate,
   onLogout,
   children,
@@ -500,6 +512,7 @@ function AppLayout({
   route: RouteId;
   user: AuthUser;
   hasSession: boolean;
+  session: SessionData | null;
   onNavigate: (r: RouteId) => void;
   onLogout: () => void;
   children: React.ReactNode;
@@ -526,6 +539,7 @@ function AppLayout({
           {children}
         </div>
       </div>
+      {route !== "chat" ? <FloatingChat session={session} /> : null}
     </div>
   );
 }
@@ -814,9 +828,14 @@ function DashboardPage({
           <div className="dashboardFiles glassPanel">
             <div className="panelHeader">
               <h2>Загруженные материалы</h2>
-              <button type="button" onClick={() => onNavigate("materials")}>
-                Все материалы <ChevronRight size={16} />
-              </button>
+              <div style={{ display: "flex", gap: 8 }}>
+                <Button variant="secondary" onClick={() => onNavigate("upload")}>
+                  <Plus size={15} /> Добавить ещё
+                </Button>
+                <button type="button" onClick={() => onNavigate("materials")}>
+                  Все материалы <ChevronRight size={16} />
+                </button>
+              </div>
             </div>
             <div className="fileList">
               {session.files.slice(0, 4).map((f) => (
@@ -834,10 +853,12 @@ function DashboardPage({
 
           <div className="quickGrid">
             {[
-              { label: "Карточки", icon: LibraryBig, route: "flashcards" as RouteId, desc: "Термины и определения" },
-              { label: "Тесты", icon: ClipboardCheck, route: "quiz" as RouteId, desc: "Проверь себя" },
-              { label: "Мнемоники", icon: Brain, route: "mnemonics" as RouteId, desc: "Запомни легко" },
-              { label: "Чат", icon: MessageCircle, route: "chat" as RouteId, desc: "Задай вопрос по материалу" },
+              { label: "Карточки",       icon: LibraryBig,    route: "flashcards" as RouteId, desc: "Термины и определения" },
+              { label: "Тесты",          icon: ClipboardCheck, route: "quiz" as RouteId,       desc: "Проверь себя" },
+              { label: "Краткий пересказ", icon: BookOpen,    route: "summary" as RouteId,    desc: "Суть материала кратко" },
+              { label: "Мнемоники",      icon: Brain,         route: "mnemonics" as RouteId,  desc: "Запомни легко" },
+              { label: "2к1",            icon: Trophy,        route: "contest" as RouteId,    desc: "Тренировка конкурса" },
+              { label: "Косатик — чат",  icon: MessageCircle, route: "chat" as RouteId,       desc: "Задай вопрос по материалу" },
             ].map(({ label, icon: Icon, route, desc }) => (
               <button key={label} className="quickCard" type="button" onClick={() => onNavigate(route)}>
                 <div>
@@ -867,9 +888,11 @@ interface UploadItem {
 function UploadPage({
   onNavigate,
   onSessionReady,
+  user,
 }: {
   onNavigate: (r: RouteId) => void;
   onSessionReady: (session: SessionData) => void;
+  user: AuthUser | null;
 }) {
   const [items, setItems] = useState<UploadItem[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -891,7 +914,7 @@ function UploadPage({
     setItems(newItems);
     onNavigate("processing");
     try {
-      const result = await uploadAndProcessDocuments(list);
+      const result = await uploadAndProcessDocuments(list, user?.token, undefined);
       const mappedFiles = result.files.map((f) => ({
         filename: f.filename,
         status: f.status,
@@ -973,7 +996,7 @@ function UploadPage({
               [Brain, "Анализируем содержание", "Выделяем ключевые темы"],
               [Sparkles, "Создаём материалы", "Карточки, тесты и мнемоники"],
               [Target, "Строим план", "Персональный путь подготовки"],
-              [Bell, "Всё готово", "Можно начинать тренироваться"],
+              [Check, "Всё готово", "Можно начинать тренироваться"],
             ].map(([Icon, title, text]) => (
               <div key={String(title)}>
                 <Icon size={20} />
@@ -1018,12 +1041,39 @@ function ProcessingPage({
   ];
   const isDone = !!session;
 
-  useEffect(() => {
-    if (isDone) {
-      const t = setTimeout(() => onNavigate("dashboard"), 2000);
-      return () => clearTimeout(t);
-    }
-  }, [isDone, onNavigate]);
+  if (isDone && session) {
+    return (
+      <div className="processingPage">
+        <section className="processingHero glassPanel">
+          <Sparkles className="decor decor--one" size={22} />
+          <Sparkles className="decor decor--two" size={16} />
+          <img src={orcaBadgeUrl} alt="Орка Зачётки" />
+          <h1>Готово! ✓</h1>
+          <p>
+            <strong>{session.documentTitle}</strong> обработан и готов к изучению.
+          </p>
+          <div className="processingActions">
+            {[
+              { label: "Краткий пересказ", route: "summary" as RouteId, icon: BookOpen },
+              { label: "Карточки", route: "flashcards" as RouteId, icon: LibraryBig },
+              { label: "Тесты", route: "quiz" as RouteId, icon: ClipboardCheck },
+              { label: "Мнемоники", route: "mnemonics" as RouteId, icon: Brain },
+              { label: "2к1", route: "contest" as RouteId, icon: Trophy },
+              { label: "Чат с Косатиком", route: "chat" as RouteId, icon: MessageCircle },
+            ].map(({ label, route, icon: Icon }) => (
+              <button key={route} type="button" className="processingActionBtn" onClick={() => onNavigate(route)}>
+                <Icon size={20} />
+                {label}
+              </button>
+            ))}
+          </div>
+          <button type="button" className="processingSecondary" onClick={() => onNavigate("dashboard")}>
+            На главную
+          </button>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="processingPage">
@@ -1031,59 +1081,172 @@ function ProcessingPage({
         <Sparkles className="decor decor--one" size={22} />
         <Sparkles className="decor decor--two" size={16} />
         <img src={orcaBadgeUrl} alt="Орка Зачётки" />
-        <h1>{isDone ? "Готово! ✓" : "Зачётка работает над материалами..."}</h1>
-        <p>
-          {isDone
-            ? "Материалы обработаны — переходим к подготовке."
-            : "Анализируем, структурируем и создаём всё для эффективной подготовки."}
-        </p>
+        <h1>Зачётка работает над материалами...</h1>
+        <p>Анализируем, структурируем и создаём всё для эффективной подготовки.</p>
         <div className="pipeline">
           {steps.map((step, i) => (
             <article
               key={step}
               className={cx(
-                isDone || i < 4 ? "done" : "",
-                !isDone && i === 1 ? "active" : ""
+                i < 4 ? "done" : "",
+                i === 1 ? "active" : ""
               )}
             >
-              <span>{isDone || i < 1 ? <Check size={20} /> : !isDone && i === 1 ? <Loader2 size={20} className="spin" /> : <i />}</span>
+              <span>{i < 1 ? <Check size={20} /> : i === 1 ? <Loader2 size={20} className="spin" /> : <i />}</span>
               <strong>{step}</strong>
             </article>
           ))}
         </div>
-        {isDone ? null : (
-          <div className="processingProgress">
-            <ProgressBar value={40} />
-          </div>
-        )}
+        <div className="processingProgress">
+          <ProgressBar value={40} />
+        </div>
         <blockquote>Ты на шаг ближе к своей цели. Мы рядом!</blockquote>
       </section>
     </div>
   );
 }
 
-// ─── Materials ────────────────────────────────────────────────────────────────
+// ─── Material picker (shared component for study pages) ──────────────────────
+
+interface PickerOption { collection_id: string; document_title: string; }
+
+function buildPickerOptions(materials: MaterialRecord[], session: SessionData | null): PickerOption[] {
+  const opts: PickerOption[] = materials.map((m) => ({ collection_id: m.collection_id, document_title: m.document_title }));
+  if (session && !materials.find((m) => m.collection_id === session.collectionId)) {
+    opts.unshift({ collection_id: session.collectionId, document_title: session.documentTitle });
+  }
+  return opts;
+}
+
+function MaterialPicker({
+  materials,
+  session,
+  activeId,
+  onSelect,
+}: {
+  materials: MaterialRecord[];
+  session: SessionData | null;
+  activeId: string | null;
+  onSelect: (id: string, title: string) => void;
+}) {
+  const options = buildPickerOptions(materials, session);
+  if (options.length === 0) return null;
+  return (
+    <div className="materialPickerRow">
+      <label className="materialPickerLabel" htmlFor="matPicker">Материал:</label>
+      <select
+        id="matPicker"
+        className="materialPickerSelect"
+        value={activeId ?? ""}
+        onChange={(e) => {
+          const m = options.find((o) => o.collection_id === e.target.value);
+          if (m) onSelect(m.collection_id, m.document_title);
+        }}
+      >
+        {!activeId ? <option value="">— выбери материал —</option> : null}
+        {options.map((m) => (
+          <option key={m.collection_id} value={m.collection_id}>
+            {m.document_title}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+// ─── Count selector ───────────────────────────────────────────────────────────
+
+// Multi-material picker: chip-based toggles
+function MultiMaterialPicker({
+  materials,
+  session,
+  selectedIds,
+  onChangeIds,
+}: {
+  materials: MaterialRecord[];
+  session: SessionData | null;
+  selectedIds: string[];
+  onChangeIds: (ids: string[]) => void;
+}) {
+  const options = buildPickerOptions(materials, session);
+  if (options.length === 0) return null;
+  function toggle(id: string) {
+    onChangeIds(selectedIds.includes(id) ? selectedIds.filter((x) => x !== id) : [...selectedIds, id]);
+  }
+  const allSelected = options.length > 0 && options.every((o) => selectedIds.includes(o.collection_id));
+  return (
+    <div className="multiPickerRow">
+      <span className="materialPickerLabel">Материалы:</span>
+      <div className="multiPickerChips">
+        {options.map((o) => (
+          <button
+            key={o.collection_id}
+            type="button"
+            className={`multiPickerChip${selectedIds.includes(o.collection_id) ? " isSelected" : ""}`}
+            onClick={() => toggle(o.collection_id)}
+          >
+            {o.document_title}
+          </button>
+        ))}
+        {options.length > 1 && (
+          <button
+            type="button"
+            className="multiPickerChip multiPickerAll"
+            onClick={() => onChangeIds(allSelected ? [] : options.map((o) => o.collection_id))}
+          >
+            {allSelected ? "Снять всё" : "Все"}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CountSelector({ value, onChange, label = "Кол-во:" }: { value: number; onChange: (n: number) => void; label?: string }) {
+  return (
+    <div className="countSelector">
+      <span className="countSelectorLabel">{label}</span>
+      <div className="countSelectorControls">
+        <button type="button" className="countBtn" onClick={() => onChange(Math.max(3, value - 1))} disabled={value <= 3}>−</button>
+        <span className="countSelectorValue">{value}</span>
+        <button type="button" className="countBtn" onClick={() => onChange(Math.min(30, value + 1))} disabled={value >= 30}>+</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Materials (library) ──────────────────────────────────────────────────────
 
 function MaterialsPage({
   session,
+  materials,
+  materialsLoading,
   onNavigate,
+  onActivate,
+  onDelete,
 }: {
   session: SessionData | null;
+  materials: MaterialRecord[];
+  materialsLoading: boolean;
   onNavigate: (r: RouteId) => void;
+  onActivate: (mat: MaterialRecord) => void;
+  onDelete: (collectionId: string) => Promise<void>;
 }) {
-  if (!session) {
-    return (
-      <div className="pageWithIntro">
-        <div className="pageIntro"><div><h1>Мои материалы</h1><p>Здесь будут твои загруженные файлы.</p></div></div>
-        <EmptyState
-          icon={FileText}
-          title="Материалов пока нет"
-          text="Загрузи первый конспект — мы обработаем его и создадим карточки, тесты и мнемоники."
-          action="Загрузить материалы"
-          onAction={() => onNavigate("upload")}
-        />
-      </div>
-    );
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function handleDelete(collectionId: string) {
+    setDeletingId(collectionId);
+    try {
+      await onDelete(collectionId);
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  function fmtDate(iso: string) {
+    try {
+      return new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+    } catch { return iso; }
   }
 
   return (
@@ -1092,31 +1255,66 @@ function MaterialsPage({
         <div>
           <h1>Мои материалы</h1>
           <p>
-            Загружено {session.files.length} файл{session.files.length === 1 ? "" : "а"} ·{" "}
-            {new Date(session.uploadedAt).toLocaleDateString("ru-RU")}
+            {materialsLoading
+              ? "Загружаем библиотеку..."
+              : materials.length > 0
+              ? `${materials.length} материал${materials.length === 1 ? "" : materials.length < 5 ? "а" : "ов"} в библиотеке`
+              : "Библиотека пуста — загрузи первый материал"}
           </p>
         </div>
-        <Button onClick={() => onNavigate("upload")}><Plus size={17} /> Загрузить ещё</Button>
+        <Button onClick={() => onNavigate("upload")}><Plus size={17} /> Загрузить</Button>
       </div>
-      <div className="materialCards">
-        {session.files.map((f) => (
-          <article className="materialCard glassPanel" key={f.filename}>
-            <FileBadge type={f.filename.split(".").pop()?.toUpperCase() ?? "FILE"} />
-            <strong className="materialCardName">{f.filename}</strong>
-            <div className="materialCardMeta">
-              <Badge tone={f.status === "processed" ? "green" : "orange"}>
-                {f.status === "processed" ? "Обработан" : "Обрабатывается"}
-              </Badge>
-              <span>{f.chunks_count} фрагментов</span>
-            </div>
-            <div className="materialCardActions">
-              <Button variant="secondary" onClick={() => onNavigate("flashcards")}>Карточки</Button>
-              <Button variant="secondary" onClick={() => onNavigate("quiz")}>Тест</Button>
-              <Button variant="ghost" onClick={() => onNavigate("chat")}>Чат</Button>
-            </div>
-          </article>
-        ))}
-      </div>
+
+      {materialsLoading ? (
+        <SpinnerOverlay text="Загружаем библиотеку материалов..." />
+      ) : materials.length === 0 ? (
+        <EmptyState
+          icon={FileText}
+          title="Библиотека пуста"
+          text="Загрузи конспект, лекцию или учебник — он появится здесь и будет доступен для карточек, тестов и чата."
+          action="Загрузить материалы"
+          onAction={() => onNavigate("upload")}
+        />
+      ) : (
+        <div className="materialLibrary">
+          {materials.map((mat) => {
+            const isActive = session?.collectionId === mat.collection_id;
+            return (
+              <article key={mat.collection_id} className={cx("materialLibCard glassPanel", isActive && "isActive")}>
+                {isActive ? <span className="materialLibActiveBadge">Активный</span> : null}
+                <div className="materialLibCardHeader">
+                  <strong className="materialLibTitle">{mat.document_title}</strong>
+                  <span className="materialLibDate">{fmtDate(mat.created_at)}</span>
+                </div>
+                <div className="materialLibFiles">
+                  {mat.files.map((f) => (
+                    <div className="materialLibFile" key={f.filename}>
+                      <FileBadge type={f.filename.split(".").pop()?.toUpperCase() ?? "FILE"} />
+                      <span className="materialLibFileName">{f.filename}</span>
+                      <Badge tone={f.status === "processed" ? "green" : "orange"}>
+                        {f.status === "processed" ? "Обработан" : "В обработке"}
+                      </Badge>
+                      <span className="materialLibChunks">{f.chunks_count} фр.</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="materialLibActions">
+                  {!isActive ? (
+                    <Button onClick={() => onActivate(mat)}>Активировать</Button>
+                  ) : (
+                    <Button variant="secondary" onClick={() => onNavigate("flashcards")}>Заниматься</Button>
+                  )}
+                  <Button variant="secondary" onClick={() => onNavigate("summary")}>Пересказ</Button>
+                  <Button variant="secondary" onClick={() => onNavigate("chat")}>Чат</Button>
+                  <Button variant="ghost" loading={deletingId === mat.collection_id} onClick={() => handleDelete(mat.collection_id)}>
+                    Удалить
+                  </Button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1124,54 +1322,13 @@ function MaterialsPage({
 // ─── Topics (stub — реальная генерация идёт через Study) ─────────────────────
 
 function TopicsPage({
-  session,
   onNavigate,
 }: {
   session: SessionData | null;
   onNavigate: (r: RouteId) => void;
 }) {
-  if (!session) {
-    return (
-      <div className="pageWithIntro">
-        <div className="pageIntro"><div><h1>Темы</h1><p>Темы появятся после загрузки материалов.</p></div></div>
-        <EmptyState
-          icon={Layers3}
-          title="Тем пока нет"
-          text="Темы появятся после обработки материалов."
-          action="Загрузить материалы"
-          onAction={() => onNavigate("upload")}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="pageWithIntro">
-      <div className="pageIntro">
-        <div><h1>Темы</h1><p>Темы извлечены из твоих материалов. Выбери, с чего начать.</p></div>
-      </div>
-      <div className="topicHint glassPanel">
-        <Sparkles size={22} />
-        <div>
-          <strong>Зачётка проанализировала материалы</strong>
-          <p>Используй карточки, тесты, мнемоники или чат — они уже построены на основе твоих файлов.</p>
-        </div>
-      </div>
-      <div className="quickGrid">
-        {[
-          { label: "Карточки", icon: LibraryBig, route: "flashcards" as RouteId, desc: "Термины и определения" },
-          { label: "Тесты", icon: ClipboardCheck, route: "quiz" as RouteId, desc: "Проверь знания" },
-          { label: "Мнемоники", icon: Brain, route: "mnemonics" as RouteId, desc: "Запомни легко" },
-          { label: "Чат", icon: MessageCircle, route: "chat" as RouteId, desc: "Задай вопрос" },
-        ].map(({ label, icon: Icon, route, desc }) => (
-          <button key={label} className="quickCard" type="button" onClick={() => onNavigate(route)}>
-            <div><strong>{label}</strong><span>{desc}</span></div>
-            <Icon size={46} />
-          </button>
-        ))}
-      </div>
-    </div>
-  );
+  useEffect(() => { onNavigate("materials"); }, [onNavigate]);
+  return null;
 }
 
 // ─── Study pages (flashcards / quiz / mnemonics) ──────────────────────────────
@@ -1210,11 +1367,13 @@ function StudyPage({
   mode,
   session,
   user,
+  materials,
   onNavigate,
 }: {
   mode: StudyMode;
   session: SessionData | null;
   user: AuthUser;
+  materials: MaterialRecord[];
   onNavigate: (r: RouteId) => void;
 }) {
   const meta = STUDY_MODE_META[mode];
@@ -1227,71 +1386,84 @@ function StudyPage({
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [savedResults, setSavedResults] = useState<LocalSavedResult[]>([]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [count, setCount] = useState(meta.count);
+  const hasAutoOpened = useRef(false);
 
-  // Загружаем сохранённые результаты при монтировании
+  // Multi-material selection
+  const allOptions = buildPickerOptions(materials, session);
+  const initIds = session ? [session.collectionId] : (allOptions.length === 1 ? [allOptions[0].collection_id] : []);
+  const [selectedIds, setSelectedIds] = useState<string[]>(initIds);
+
+  const activeColl = selectedIds.length === 1
+    ? allOptions.find((o) => o.collection_id === selectedIds[0]) ?? null
+    : null;
+
   useEffect(() => {
     listSavedResults(user.token)
       .then((all) => setSavedResults(all.filter((r) => r.mode === meta.apiMode) as LocalSavedResult[]))
-      .catch(() => {/* тихо игнорируем */});
+      .catch(() => {});
   }, [user.token, meta.apiMode]);
 
+  // Авто-открытие последнего сохранения при первой загрузке страницы
   useEffect(() => {
-    setItems([]);
-    setGenerated(false);
-    setError("");
-    setCardIndex(0);
-    setFlipped(false);
-    setSelectedAnswer(null);
+    if (savedResults.length > 0 && !generated && !hasAutoOpened.current) {
+      hasAutoOpened.current = true;
+      openSaved(savedResults[0]);
+    }
+  }, [savedResults]);
+
+  useEffect(() => {
+    setItems([]); setGenerated(false); setError(""); setCardIndex(0); setFlipped(false); setSelectedAnswer(null);
+    hasAutoOpened.current = false;
   }, [mode, session?.collectionId]);
+
+  useEffect(() => {
+    if (session && !selectedIds.includes(session.collectionId)) {
+      setSelectedIds([session.collectionId]);
+    }
+  }, [session?.collectionId]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (mode !== "flashcards" || !generated || items.length === 0) return;
       if (e.code === "Space") { e.preventDefault(); setFlipped((v) => !v); }
-      if (e.key.toLowerCase() === "a") { setCardIndex((c) => (c - 1 + items.length) % items.length); setFlipped(false); }
-      if (e.key.toLowerCase() === "d") { setCardIndex((c) => (c + 1) % items.length); setFlipped(false); }
+      if (e.key.toLowerCase() === "a" || e.code === "ArrowLeft") { e.preventDefault(); setCardIndex((c) => (c - 1 + items.length) % items.length); setFlipped(false); }
+      if (e.key.toLowerCase() === "d" || e.code === "ArrowRight") { e.preventDefault(); setCardIndex((c) => (c + 1) % items.length); setFlipped(false); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [mode, generated, items.length]);
 
   async function generate() {
-    if (!session) return;
-    setLoading(true);
-    setError("");
+    if (selectedIds.length === 0) return;
+    setLoading(true); setError("");
     try {
-      const result = await generateStudy(
-        session.collectionId,
-        meta.apiMode as "flashcards" | "exam_questions" | "mnemonics" | "summary",
-        false,
-        meta.count,
-        user.token,
-        session.documentTitle,
-      );
-      const newItems = (result.items ?? []) as StudyItem[];
-      setItems(newItems);
-      setGenerated(true);
-      if (result.warning) setError(result.warning);
-      // Обновляем список сохранённых (overwrite или добавить)
-      if (result.result_id) {
-        const saved: LocalSavedResult = {
-          id: result.result_id,
-          mode: meta.apiMode,
-          document_title: session.documentTitle,
-          collection_id: session.collectionId,
-          item_count: newItems.length,
-          items: newItems,
-          created_at: result.created_at ?? new Date().toISOString(),
-          updated_at: result.updated_at ?? new Date().toISOString(),
-        };
-        setSavedResults((prev) => {
-          const without = prev.filter((r) => r.id !== saved.id);
-          return [saved, ...without];
-        });
+      const colls = selectedIds.map((id) => allOptions.find((o) => o.collection_id === id)).filter(Boolean) as PickerOption[];
+      const allItems: StudyItem[] = [];
+      for (const coll of colls) {
+        const result = await generateStudy(
+          coll.collection_id,
+          meta.apiMode as "flashcards" | "exam_questions" | "mnemonics" | "summary",
+          false, count, user.token, coll.document_title,
+        );
+        const newItems = (result.items ?? []) as StudyItem[];
+        allItems.push(...newItems);
+        if (result.warning) setError(result.warning);
+        if (result.result_id) {
+          const saved: LocalSavedResult = {
+            id: result.result_id, mode: meta.apiMode,
+            document_title: coll.document_title, collection_id: coll.collection_id,
+            item_count: newItems.length, items: newItems,
+            created_at: result.created_at ?? new Date().toISOString(),
+            updated_at: result.updated_at ?? new Date().toISOString(),
+          };
+          setSavedResults((prev) => [saved, ...prev.filter((r) => r.id !== saved.id)]);
+        }
       }
+      setItems(allItems);
+      setGenerated(true);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Ошибка генерации.";
-      setError(msg);
+      setError(err instanceof Error ? err.message : "Ошибка генерации.");
     } finally {
       setLoading(false);
     }
@@ -1302,87 +1474,71 @@ function StudyPage({
     try {
       await deleteSavedResult(user.token, id);
       setSavedResults((prev) => prev.filter((r) => r.id !== id));
-      if (generated && items.length > 0) {
-        // если открытый результат удалён — закрываем
-        setGenerated(false);
-        setItems([]);
-      }
-    } catch {
-      // тихо
-    } finally {
-      setDeletingId(null);
-    }
+      if (generated && items.length > 0) { setGenerated(false); setItems([]); }
+    } catch {} finally { setDeletingId(null); }
   }
 
   function openSaved(r: LocalSavedResult) {
-    setItems(r.items);
-    setGenerated(true);
-    setCardIndex(0);
-    setFlipped(false);
-    setSelectedAnswer(null);
-    setError("");
+    setItems(r.items); setGenerated(true); setCardIndex(0); setFlipped(false); setSelectedAnswer(null); setError("");
   }
 
-  if (!session) {
-    return (
-      <div className="pageWithIntro">
-        <div className="pageIntro"><div><h1>{meta.label}</h1><p>{meta.emptyText}</p></div></div>
-        {savedResults.length > 0 ? (
-          <SavedResultsList
-            results={savedResults}
-            deletingId={deletingId}
-            onOpen={openSaved}
-            onDelete={handleDelete}
-          />
-        ) : (
-          <EmptyState icon={LibraryBig} title={`${meta.label} недоступны`} text={meta.emptyText} action="Загрузить материалы" onAction={() => onNavigate("upload")} />
-        )}
-      </div>
-    );
-  }
+  const titleText = generated
+    ? `${meta.itemWord(items.length)}${selectedIds.length > 1 ? ` по ${selectedIds.length} материалам` : activeColl ? ` по «${activeColl.document_title}»` : ""}`
+    : selectedIds.length > 0
+    ? `Выбрано материалов: ${selectedIds.length}`
+    : "Выбери материалы для генерации";
 
   return (
     <div className="pageWithIntro studyPage">
       <div className="pageIntro">
         <div>
           <h1>{meta.label}</h1>
-          <p>
-            {generated
-              ? `${meta.itemWord(items.length)} по «${session.documentTitle}»`
-              : `Материал: «${session.documentTitle}»`}
-          </p>
+          <p>{titleText}</p>
         </div>
-        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+          <CountSelector value={count} onChange={setCount} />
           {generated ? (
             <Button variant="secondary" onClick={() => { setGenerated(false); setItems([]); setCardIndex(0); setFlipped(false); setSelectedAnswer(null); }}>
               <RotateCcw size={17} /> К списку
             </Button>
           ) : null}
-          <Button onClick={generate} loading={loading} disabled={loading}>
+          <Button onClick={generate} loading={loading} disabled={loading || selectedIds.length === 0}>
             <Sparkles size={17} /> {generated ? "Обновить" : "Сгенерировать"}
           </Button>
         </div>
       </div>
 
-      {error ? <ErrorBanner message={error} onClose={() => setError("")} /> : null}
-      {loading ? <SpinnerOverlay text="Зачётка анализирует материалы и генерирует контент..." /> : null}
-
-      {/* Сохранённые результаты — список блоков */}
-      {!generated && savedResults.length > 0 ? (
-        <SavedResultsList
-          results={savedResults}
-          deletingId={deletingId}
-          onOpen={openSaved}
-          onDelete={handleDelete}
+      {allOptions.length > 0 ? (
+        <MultiMaterialPicker
+          materials={materials}
+          session={session}
+          selectedIds={selectedIds}
+          onChangeIds={(ids) => {
+            setSelectedIds(ids);
+            setGenerated(false); setItems([]); setCardIndex(0); setFlipped(false); setSelectedAnswer(null);
+          }}
         />
       ) : null}
 
-      {/* Пустое состояние до первой генерации */}
-      {!generated && savedResults.length === 0 && !loading ? (
+      {error ? <ErrorBanner message={error} onClose={() => setError("")} /> : null}
+      {loading ? <SpinnerOverlay text="Зачётка анализирует материалы и генерирует контент..." /> : null}
+
+      {!generated && savedResults.length > 0 ? (
+        <SavedResultsList results={savedResults} deletingId={deletingId} onOpen={openSaved} onDelete={handleDelete} />
+      ) : null}
+
+      {!generated && savedResults.length === 0 && !loading && allOptions.length === 0 ? (
+        <EmptyState icon={LibraryBig} title={`${meta.label} недоступны`} text={meta.emptyText} action="Загрузить материалы" onAction={() => onNavigate("upload")} />
+      ) : null}
+
+      {!generated && savedResults.length === 0 && !loading && allOptions.length > 0 && selectedIds.length === 0 ? (
+        <EmptyState icon={Sparkles} title="Выбери материалы выше" text="Отметь один или несколько материалов, затем нажми «Сгенерировать»." />
+      ) : null}
+
+      {!generated && savedResults.length === 0 && !loading && selectedIds.length > 0 ? (
         <EmptyState icon={Sparkles} title={`Здесь появятся ${meta.label.toLowerCase()} после генерации`} text="Нажми «Сгенерировать», чтобы создать материал по загруженным файлам." />
       ) : null}
 
-      {/* Пустой результат после генерации */}
       {generated && items.length === 0 && !loading ? (
         <EmptyState icon={Sparkles} title="Ничего не нашлось" text="По этим материалам не удалось создать контент. Попробуй загрузить другие файлы." />
       ) : null}
@@ -1479,62 +1635,46 @@ function FlashcardsView({
 
   return (
     <div className="flashcardLayout">
-      <main>
-        <div className="cardMeta">
-          <span>Карточка {cardIndex + 1} из {items.length}</span>
-          <ProgressBar value={Math.round(((cardIndex + 1) / items.length) * 100)} />
-        </div>
-        <button
-          className={cx("trainerCard", flipped && "flipped")}
-          type="button"
-          onClick={() => setFlipped((v) => !v)}
-          aria-label={flipped ? "Показать вопрос" : "Показать ответ"}
-        >
-          <div className="trainerCardInner">
-            <section className="trainerFace trainerFace--front">
-              <Badge>ТЕРМИН / ВОПРОС</Badge>
-              <h2>{front}</h2>
-              <CircleHelp size={100} className="cardDecorIcon" />
-              <span className="cardHint">Нажми, чтобы перевернуть</span>
-            </section>
-            <section className="trainerFace trainerFace--back">
-              <Badge tone="cyan">ОТВЕТ</Badge>
-              <h2>{back}</h2>
-            </section>
-          </div>
-        </button>
-        <div className="cardControls">
-          <Button variant="secondary" onClick={() => move(-1)}>
-            <ChevronLeft size={18} /> Предыдущая
-          </Button>
-          <Button onClick={() => setFlipped((v) => !v)}>
-            <RotateCcw size={18} /> Перевернуть
-          </Button>
-          <Button variant="secondary" onClick={() => move(1)}>
-            Следующая <ChevronRight size={18} />
-          </Button>
-        </div>
-        <div className="hotkeys">
-          <span>Горячие клавиши:</span>
-          <kbd>A</kbd><span>←</span>
-          <kbd>Пробел</kbd><span>перевернуть</span>
-          <kbd>D</kbd><span>→</span>
-        </div>
-      </main>
-      <aside className="studySidebar">
-        {back ? (
-          <article className="glassPanel">
+      <div className="cardMeta">
+        <span>Карточка {cardIndex + 1} из {items.length}</span>
+        <ProgressBar value={Math.round(((cardIndex + 1) / items.length) * 100)} />
+      </div>
+      <button
+        className={cx("trainerCard", flipped && "flipped")}
+        type="button"
+        onClick={() => setFlipped((v) => !v)}
+        aria-label={flipped ? "Показать вопрос" : "Показать ответ"}
+      >
+        <div className="trainerCardInner">
+          <section className="trainerFace trainerFace--front">
+            <Badge>ТЕРМИН / ВОПРОС</Badge>
+            <h2>{front}</h2>
+            <CircleHelp size={100} className="cardDecorIcon" />
+            <span className="cardHint">Нажми, чтобы перевернуть</span>
+          </section>
+          <section className="trainerFace trainerFace--back">
             <Badge tone="cyan">ОТВЕТ</Badge>
-            <p className="sideAnswerText">{back}</p>
-          </article>
-        ) : null}
-        {card.hint ? (
-          <article className="glassPanel">
-            <Badge tone="muted">ПОДСКАЗКА</Badge>
-            <p className="sideAnswerText">{String(card.hint)}</p>
-          </article>
-        ) : null}
-      </aside>
+            <h2>{back}</h2>
+          </section>
+        </div>
+      </button>
+      <div className="cardControls">
+        <Button variant="secondary" onClick={() => move(-1)}>
+          <ChevronLeft size={18} /> Предыдущая
+        </Button>
+        <Button onClick={() => setFlipped((v) => !v)}>
+          <RotateCcw size={18} /> Перевернуть
+        </Button>
+        <Button variant="secondary" onClick={() => move(1)}>
+          Следующая <ChevronRight size={18} />
+        </Button>
+      </div>
+      <div className="hotkeys">
+        <span>Горячие клавиши:</span>
+        <kbd>←</kbd><span>назад</span>
+        <kbd>Пробел</kbd><span>перевернуть</span>
+        <kbd>→</kbd><span>вперёд</span>
+      </div>
     </div>
   );
 }
@@ -1673,6 +1813,367 @@ function MnemonicsView({ items }: { items: StudyItem[] }) {
   );
 }
 
+// ─── Contest (2к1) page ───────────────────────────────────────────────────────
+
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+type ContestPhase = "idle" | "reading" | "countdown" | "answering" | "feedback" | "finished";
+
+function useAudioBeep() {
+  const ctxRef = useRef<AudioContext | null>(null);
+  return function beep(freq = 880, durationMs = 120) {
+    try {
+      if (!ctxRef.current) ctxRef.current = new AudioContext();
+      const ctx = ctxRef.current;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durationMs / 1000);
+      osc.start();
+      osc.stop(ctx.currentTime + durationMs / 1000);
+    } catch {}
+  };
+}
+
+function speakRu(text: string, onEnd?: () => void) {
+  if (!window.speechSynthesis) { onEnd?.(); return; }
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = "ru-RU";
+  utt.rate = 0.88;
+  utt.pitch = 1;
+  if (onEnd) utt.onend = onEnd;
+  window.speechSynthesis.speak(utt);
+}
+
+function ContestPage({
+  session,
+  user,
+  materials,
+  onNavigate,
+}: {
+  session: SessionData | null;
+  user: AuthUser;
+  materials: MaterialRecord[];
+  onNavigate: (r: RouteId) => void;
+}) {
+  const [questions, setQuestions] = useState<Record<string, unknown>[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [generated, setGenerated] = useState(false);
+  const [qIndex, setQIndex] = useState(0);
+  const [phase, setPhase] = useState<ContestPhase>("idle");
+  const [countdown, setCountdown] = useState(3);
+  const [answeredCorrect, setAnsweredCorrect] = useState<boolean | null>(null);
+  const [mistakes, setMistakes] = useState(0);
+  const [count, setCount] = useState(10);
+  const [savedResults, setSavedResults] = useState<LocalSavedResult[]>([]);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const hasAutoOpened = useRef(false);
+  const mistakeLimit = 2;
+  const beep = useAudioBeep();
+
+  const allOptions = buildPickerOptions(materials, session);
+  const initIds = session ? [session.collectionId] : (allOptions.length === 1 ? [allOptions[0].collection_id] : []);
+  const [selectedIds, setSelectedIds] = useState<string[]>(initIds);
+  const activeColl = selectedIds.length === 1
+    ? allOptions.find((o) => o.collection_id === selectedIds[0]) ?? null
+    : null;
+
+  // Загрузка сохранённых результатов с бэкенда
+  useEffect(() => {
+    listSavedResults(user.token)
+      .then((all) => setSavedResults(all.filter((r) => r.mode === "two_to_one") as LocalSavedResult[]))
+      .catch(() => {});
+  }, [user.token]);
+
+  // Авто-открытие последней сохранённой тренировки
+  useEffect(() => {
+    if (savedResults.length > 0 && !generated && !hasAutoOpened.current) {
+      hasAutoOpened.current = true;
+      openSaved(savedResults[0]);
+    }
+  }, [savedResults]);
+
+  useEffect(() => {
+    if (session && !selectedIds.includes(session.collectionId)) setSelectedIds([session.collectionId]);
+  }, [session?.collectionId]);
+
+  // Countdown tick
+  useEffect(() => {
+    if (phase !== "countdown") return;
+    if (countdown <= 0) { setPhase("answering"); return; }
+    beep(countdown === 1 ? 1200 : 660, 140);
+    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [phase, countdown]);
+
+  async function generate() {
+    if (!activeColl) return;
+    window.speechSynthesis?.cancel();
+    setLoading(true); setError("");
+    try {
+      const result = await generateContest(
+        activeColl.collection_id, "two_to_one", false, count,
+        user.token, activeColl.document_title,
+      );
+      const qs = shuffleArray(result.questions ?? []);
+      // Обновляем список сохранённых если получили result_id
+      if (result.result_id) {
+        const saved: LocalSavedResult = {
+          id: result.result_id,
+          mode: "two_to_one",
+          document_title: activeColl.document_title,
+          collection_id: activeColl.collection_id,
+          item_count: qs.length,
+          items: qs,
+          created_at: result.created_at ?? new Date().toISOString(),
+          updated_at: result.updated_at ?? new Date().toISOString(),
+        };
+        setSavedResults((prev) => [saved, ...prev.filter((r) => r.id !== saved.id)]);
+      }
+      setQuestions(qs);
+      setGenerated(true);
+      setQIndex(0); setMistakes(0); setAnsweredCorrect(null);
+      if (qs.length > 0) startQuestion(qs[0]);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Ошибка генерации.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function openSaved(r: LocalSavedResult) {
+    window.speechSynthesis?.cancel();
+    const qs = shuffleArray(r.items);
+    setQuestions(qs);
+    setGenerated(true);
+    setQIndex(0); setMistakes(0); setAnsweredCorrect(null);
+    setPhase("idle"); // не стартуем TTS автоматически — пользователь нажмёт "Начать"
+    setError("");
+  }
+
+  async function handleDelete(id: string) {
+    setDeletingId(id);
+    try {
+      await deleteSavedResult(user.token, id);
+      setSavedResults((prev) => prev.filter((r) => r.id !== id));
+      if (generated) { setGenerated(false); setQuestions([]); setPhase("idle"); }
+    } catch {} finally { setDeletingId(null); }
+  }
+
+  function startQuestion(q: Record<string, unknown>) {
+    const text = String(q.statement ?? "");
+    setPhase("reading");
+    setCountdown(3);
+    setAnsweredCorrect(null);
+    speakRu(text, () => {
+      setTimeout(() => speakRu(text, () => {
+        setPhase("countdown");
+      }), 600);
+    });
+  }
+
+  function answer(choice: boolean) {
+    if (phase !== "answering") return;
+    window.speechSynthesis?.cancel();
+    const q = questions[qIndex];
+    const correct = Boolean(q.is_true);
+    const isCorrect = choice === correct;
+    setAnsweredCorrect(isCorrect);
+    setPhase("feedback");
+    if (!isCorrect) {
+      const next = mistakes + 1;
+      setMistakes(next);
+      if (next >= mistakeLimit) {
+        setTimeout(() => { setPhase("finished"); }, 1800);
+        return;
+      }
+    }
+    beep(isCorrect ? 1047 : 330, 200);
+  }
+
+  function nextQuestion() {
+    if (qIndex + 1 >= questions.length) { setPhase("finished"); return; }
+    const next = qIndex + 1;
+    setQIndex(next);
+    startQuestion(questions[next]);
+  }
+
+  function reset() {
+    window.speechSynthesis?.cancel();
+    setGenerated(false); setQuestions([]); setQIndex(0);
+    setMistakes(0); setAnsweredCorrect(null); setPhase("idle");
+    hasAutoOpened.current = false;
+  }
+
+  const q = questions[qIndex];
+  const statement = q ? String(q.statement ?? "") : "";
+
+  return (
+    <div className="pageWithIntro">
+      <div className="pageIntro">
+        <div>
+          <h1>2к1 — тренировка</h1>
+          <p>
+            {generated && phase !== "idle"
+              ? `Вопрос ${qIndex + 1} из ${questions.length} · Ошибки: ${mistakes}/${mistakeLimit}`
+              : activeColl
+              ? `Материал: «${activeColl.document_title}»`
+              : "Выбери материал для тренировки"}
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <CountSelector value={count} onChange={setCount} label="Вопросов:" />
+          {generated ? (
+            <Button variant="secondary" onClick={reset}>
+              <RotateCcw size={17} /> К списку
+            </Button>
+          ) : null}
+          <Button onClick={generate} loading={loading} disabled={loading || selectedIds.length === 0}>
+            <Sparkles size={17} /> {generated ? "Заново" : "Сгенерировать"}
+          </Button>
+        </div>
+      </div>
+
+      {allOptions.length > 0 ? (
+        <MultiMaterialPicker
+          materials={materials}
+          session={session}
+          selectedIds={selectedIds}
+          onChangeIds={(ids) => { setSelectedIds(ids); reset(); }}
+        />
+      ) : null}
+
+      {error ? <ErrorBanner message={error} onClose={() => setError("")} /> : null}
+      {loading ? <SpinnerOverlay text="Генерируем задания 2к1..." /> : null}
+
+      {/* Список сохранённых тренировок */}
+      {!generated && !loading && savedResults.length > 0 ? (
+        <SavedResultsList results={savedResults} deletingId={deletingId} onOpen={openSaved} onDelete={handleDelete} />
+      ) : null}
+
+      {!generated && !loading && savedResults.length === 0 && allOptions.length === 0 ? (
+        <EmptyState icon={Trophy} title="2к1 недоступно" text="Загрузи материалы — тогда сможешь тренировать формат 2к1." action="Загрузить материалы" onAction={() => onNavigate("upload")} />
+      ) : null}
+
+      {!generated && !loading && savedResults.length === 0 && allOptions.length > 0 ? (
+        <EmptyState icon={Trophy} title="Здесь появятся задания 2к1" text="Выбери материал и нажми «Сгенерировать» — Косатик подготовит утверждения, прочитает их вслух и даст 3 секунды на ответ." />
+      ) : null}
+
+      {/* Загружена сохранённая тренировка, ожидаем старта */}
+      {generated && phase === "idle" && questions.length > 0 ? (
+        <div className="contestResult glassPanel">
+          <Trophy size={40} style={{ color: "var(--violet2)" }} />
+          <h2>Готов к тренировке</h2>
+          <p>{questions.length} утверждений загружено. Нажми «Начать» — вопрос будет прочитан вслух дважды, потом 3 секунды на ответ.</p>
+          <Button onClick={() => startQuestion(questions[0])}>
+            Начать тренировку <ChevronRight size={17} />
+          </Button>
+        </div>
+      ) : null}
+
+      {generated && phase === "finished" ? (
+        <div className="contestResult glassPanel">
+          {mistakes >= mistakeLimit ? (
+            <>
+              <Trophy size={40} style={{ color: "var(--cyan)" }} />
+              <h2>Игра закончена</h2>
+              <p>Ты допустил {mistakes} ошибки — достигнут лимит ({mistakeLimit}). Попробуй ещё раз!</p>
+            </>
+          ) : (
+            <>
+              <Trophy size={40} style={{ color: "var(--violet2)" }} />
+              <h2>Молодец!</h2>
+              <p>Ты прошёл все {questions.length} утверждений с {mistakes} ошибками!</p>
+            </>
+          )}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+            <Button variant="secondary" onClick={() => {
+              const reshuffled = shuffleArray(questions);
+              setQuestions(reshuffled);
+              setQIndex(0); setMistakes(0); setAnsweredCorrect(null);
+              if (reshuffled.length > 0) startQuestion(reshuffled[0]);
+            }}>
+              <RotateCcw size={17} /> Заново (те же)
+            </Button>
+            <Button onClick={generate} loading={loading}><Sparkles size={17} /> Новые вопросы</Button>
+          </div>
+        </div>
+      ) : null}
+
+      {generated && phase !== "idle" && phase !== "finished" && q ? (
+        <div className="contestCard glassPanel">
+          <p className="contestStatement">{statement}</p>
+
+          {phase === "reading" ? (
+            <div className="contestReading">
+              <Loader2 size={24} className="spin" />
+              <span>Слушай внимательно — вопрос читается вслух дважды…</span>
+            </div>
+          ) : null}
+
+          {phase === "countdown" ? (
+            <div className="contestCountdown">
+              <span className="contestCountdownNum">{countdown}</span>
+              <span className="contestCountdownLabel">секунд{countdown === 1 ? "а" : countdown < 5 ? "ы" : ""} до ответа</span>
+            </div>
+          ) : null}
+
+          {(phase === "answering" || phase === "feedback") ? (
+            <div className="contestButtons">
+              <button
+                type="button"
+                className={cx(
+                  "contestBtn contestBtn--true",
+                  phase === "feedback" && (q.is_true ? "isCorrect" : "isWrong"),
+                )}
+                onClick={() => answer(true)}
+                disabled={phase === "feedback"}
+              >
+                ДА / Верно
+              </button>
+              <button
+                type="button"
+                className={cx(
+                  "contestBtn contestBtn--false",
+                  phase === "feedback" && (!q.is_true ? "isCorrect" : "isWrong"),
+                )}
+                onClick={() => answer(false)}
+                disabled={phase === "feedback"}
+              >
+                НЕТ / Неверно
+              </button>
+            </div>
+          ) : null}
+
+          {phase === "feedback" ? (
+            <div className={cx("contestFeedback", answeredCorrect ? "isCorrect" : "isWrong")}>
+              <p>{answeredCorrect ? "Правильно! ✓" : "Неправильно ✗"}</p>
+              {q.explanation ? <p className="contestExplanation">{String(q.explanation)}</p> : null}
+              {(answeredCorrect || mistakes < mistakeLimit) ? (
+                <Button onClick={nextQuestion}>
+                  {qIndex + 1 >= questions.length ? "Завершить" : "Следующий вопрос"} <ChevronRight size={17} />
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 // ─── Chat ─────────────────────────────────────────────────────────────────────
 
 // ─── Summary page ─────────────────────────────────────────────────────────────
@@ -1680,10 +2181,12 @@ function MnemonicsView({ items }: { items: StudyItem[] }) {
 function SummaryPage({
   session,
   user,
+  materials,
   onNavigate,
 }: {
   session: SessionData | null;
   user: AuthUser;
+  materials: MaterialRecord[];
   onNavigate: (r: RouteId) => void;
 }) {
   const [sections, setSections] = useState<Record<string, unknown>[]>([]);
@@ -1692,6 +2195,10 @@ function SummaryPage({
   const [error, setError] = useState("");
   const [savedResults, setSavedResults] = useState<LocalSavedResult[]>([]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [activeColl, setActiveColl] = useState<{ id: string; title: string } | null>(
+    session ? { id: session.collectionId, title: session.documentTitle } : null,
+  );
+  const hasAutoOpened = useRef(false);
 
   useEffect(() => {
     listSavedResults(user.token)
@@ -1699,24 +2206,36 @@ function SummaryPage({
       .catch(() => {});
   }, [user.token]);
 
+  // Авто-открытие последнего пересказа при возврате на страницу
+  useEffect(() => {
+    if (savedResults.length > 0 && !generated && !hasAutoOpened.current) {
+      hasAutoOpened.current = true;
+      openSaved(savedResults[0]);
+    }
+  }, [savedResults]);
+
   useEffect(() => {
     setSections([]);
     setGenerated(false);
     setError("");
   }, [session?.collectionId]);
 
+  useEffect(() => {
+    if (session) setActiveColl({ id: session.collectionId, title: session.documentTitle });
+  }, [session?.collectionId]);
+
   async function generate() {
-    if (!session) return;
+    if (!activeColl) return;
     setLoading(true);
     setError("");
     try {
       const result = await generateStudy(
-        session.collectionId,
+        activeColl.id,
         "summary",
         false,
         undefined,
         user.token,
-        session.documentTitle,
+        activeColl.title,
       );
       const secs = (result.sections ?? result.items ?? []) as Record<string, unknown>[];
       setSections(secs);
@@ -1725,8 +2244,8 @@ function SummaryPage({
         const saved: LocalSavedResult = {
           id: result.result_id,
           mode: "summary",
-          document_title: session.documentTitle,
-          collection_id: session.collectionId,
+          document_title: activeColl.title,
+          collection_id: activeColl.id,
           item_count: secs.length,
           items: secs as StudyItem[],
           sections: secs,
@@ -1761,28 +2280,41 @@ function SummaryPage({
     }
   }
 
-  const noSession = !session;
-
   return (
     <div className="pageWithIntro">
       <div className="pageIntro">
         <div>
           <h1>Краткий пересказ</h1>
-          <p>{session ? `Материал: «${session.documentTitle}»` : "Загрузи материалы, чтобы получить пересказ."}</p>
+          <p>
+            {activeColl
+              ? `Материал: «${activeColl.title}»`
+              : "Выбери материал для пересказа"}
+          </p>
         </div>
-        {session ? (
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-            {generated ? (
-              <Button variant="secondary" onClick={() => { setGenerated(false); setSections([]); }}>
-                <RotateCcw size={17} /> К списку
-              </Button>
-            ) : null}
-            <Button onClick={generate} loading={loading} disabled={loading || noSession}>
-              <Sparkles size={17} /> {generated ? "Обновить" : "Сгенерировать"}
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          {generated ? (
+            <Button variant="secondary" onClick={() => { setGenerated(false); setSections([]); }}>
+              <RotateCcw size={17} /> К списку
             </Button>
-          </div>
-        ) : null}
+          ) : null}
+          <Button onClick={generate} loading={loading} disabled={loading || !activeColl}>
+            <Sparkles size={17} /> {generated ? "Обновить" : "Сгенерировать"}
+          </Button>
+        </div>
       </div>
+
+      {(materials.length > 0 || !!session) ? (
+        <MaterialPicker
+          materials={materials}
+          session={session}
+          activeId={activeColl?.id ?? null}
+          onSelect={(id, title) => {
+            setActiveColl({ id, title });
+            setGenerated(false);
+            setSections([]);
+          }}
+        />
+      ) : null}
 
       {error ? <ErrorBanner message={error} onClose={() => setError("")} /> : null}
       {loading ? <SpinnerOverlay text="Зачётка составляет краткий пересказ..." /> : null}
@@ -1795,9 +2327,9 @@ function SummaryPage({
         <EmptyState
           icon={BookOpen}
           title="Здесь появятся пересказы после генерации"
-          text={noSession ? "Загрузи материалы, чтобы получить краткий пересказ." : "Нажми «Сгенерировать», чтобы создать пересказ по загруженным файлам."}
-          action={noSession ? "Загрузить материалы" : undefined}
-          onAction={noSession ? () => onNavigate("upload") : undefined}
+          text={!activeColl ? "Загрузи материалы, чтобы получить краткий пересказ." : "Нажми «Сгенерировать», чтобы создать пересказ по загруженным файлам."}
+          action={!activeColl ? "Загрузить материалы" : undefined}
+          onAction={!activeColl ? () => onNavigate("upload") : undefined}
         />
       ) : null}
 
@@ -1836,39 +2368,55 @@ interface ChatMessage {
 
 function ChatPage({
   session,
+  materials,
+  onActivateMaterial,
   onNavigate,
 }: {
   session: SessionData | null;
+  materials: MaterialRecord[];
+  onActivateMaterial: (mat: MaterialRecord) => void;
   onNavigate: (r: RouteId) => void;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [activeColl, setActiveColl] = useState<{ id: string; title: string } | null>(
+    session ? { id: session.collectionId, title: session.documentTitle } : null
+  );
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (session && !activeColl) {
+      setActiveColl({ id: session.collectionId, title: session.documentTitle });
+    }
+  }, [session, activeColl]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  if (!session) {
-    return (
-      <div className="pageWithIntro">
-        <div className="pageIntro"><div><h1>Чат по материалам</h1><p>Загрузи материалы, чтобы задавать вопросы.</p></div></div>
-        <EmptyState icon={MessageCircle} title="Чат недоступен" text="Загрузи материалы — после обработки ты сможешь задавать вопросы по ним." action="Загрузить материалы" onAction={() => onNavigate("upload")} />
-      </div>
-    );
+  const collId = activeColl?.id;
+  const hasMaterials = materials.length > 0 || !!session;
+
+  function handlePickMaterial(id: string, title: string) {
+    if (activeColl?.id !== id) {
+      setMessages([]);
+    }
+    setActiveColl({ id, title });
+    const mat = materials.find((m) => m.collection_id === id);
+    if (mat) onActivateMaterial(mat);
   }
 
   async function send() {
     const text = input.trim();
-    if (!text || loading) return;
+    if (!text || loading || !collId) return;
     setInput("");
     setMessages((m) => [...m, { role: "user", text }]);
     setLoading(true);
     setError("");
     try {
-      const result = await askDocument(session!.collectionId, text);
+      const result = await askDocument(collId, text);
       setMessages((m) => [...m, { role: "assistant", text: result.answer }]);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Ошибка.";
@@ -1884,30 +2432,54 @@ function ChatPage({
 
   return (
     <div className="chatPage">
-      <div className="pageIntro">
-        <div><h1>Чат по материалам</h1><p>Задавай вопросы — нейросеть ответит строго по твоим файлам.</p></div>
-      </div>
-
       {error ? <ErrorBanner message={error} onClose={() => setError("")} /> : null}
-
+      {hasMaterials && (
+        <MaterialPicker
+          materials={materials}
+          session={session}
+          activeId={activeColl?.id ?? null}
+          onSelect={handlePickMaterial}
+        />
+      )}
       <div className="chatLayout glassPanel">
+        <div className="chatMessengerHeader">
+          <img src={orcaAstronautUrl} alt="Косатик" className="chatMessengerAvatar" />
+          <div className="chatMessengerInfo">
+            <strong>Косатик</strong>
+            <span>
+              {activeColl
+                ? `по материалу «${activeColl.title}»`
+                : hasMaterials
+                ? "выбери материал выше"
+                : "загрузи материал, чтобы начать"}
+            </span>
+          </div>
+        </div>
         <div className="chatMessages">
           {messages.length === 0 ? (
             <div className="chatEmpty">
-              <MessageCircle size={44} />
-              <p>Напиши вопрос по материалам, которые ты загрузил.</p>
-              <p className="chatEmptyHint">Если чего-то нет в материалах — нейросеть честно об этом скажет.</p>
+              <img src={orcaAstronautUrl} alt="" style={{ width: 64, opacity: .7 }} />
+              <p>
+                {collId
+                  ? "Напиши вопрос по материалам, которые ты загрузил."
+                  : hasMaterials
+                  ? "Выбери материал в списке выше — и можно задавать вопросы."
+                  : "Загрузи материалы — после обработки Косатик ответит на любые вопросы."}
+              </p>
+              {collId ? <p className="chatEmptyHint">Если чего-то нет в материалах — я честно об этом скажу.</p> : null}
             </div>
           ) : null}
           {messages.map((msg, i) => (
             <div key={i} className={cx("chatMsg", msg.role === "user" ? "chatMsg--user" : "chatMsg--assistant")}>
-              {msg.role === "assistant" ? <Brain size={18} /> : null}
+              {msg.role === "assistant" ? (
+                <img src={orcaAstronautUrl} alt="Косатик" className="chatOrcaAvatar" />
+              ) : null}
               <p>{msg.text}</p>
             </div>
           ))}
           {loading ? (
             <div className="chatMsg chatMsg--assistant">
-              <Brain size={18} />
+              <img src={orcaAstronautUrl} alt="Косатик" className="chatOrcaAvatar" />
               <Loader2 size={18} className="spin" />
             </div>
           ) : null}
@@ -1915,14 +2487,14 @@ function ChatPage({
         </div>
         <div className="chatInput">
           <textarea
-            placeholder="Задай вопрос по твоим материалам..."
+            placeholder={collId ? "Задай вопрос по твоим материалам..." : "Сначала выбери материал..."}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKey}
             rows={2}
-            disabled={loading}
+            disabled={loading || !collId}
           />
-          <Button onClick={send} disabled={!input.trim() || loading} loading={loading} aria-label="Отправить">
+          <Button onClick={send} disabled={!input.trim() || loading || !collId} loading={loading} aria-label="Отправить">
             <Send size={18} />
           </Button>
         </div>
@@ -1981,11 +2553,26 @@ function CalendarPage({ session, onNavigate }: { session: SessionData | null; on
   );
 }
 
+const AVATAR_COLORS = ["#7c3aed","#0891b2","#059669","#d97706","#dc2626","#db2777"];
+const AVATAR_COLOR_KEY = "zachetka_avatar_color";
+
+function loadAvatarColor(): string {
+  return localStorage.getItem(AVATAR_COLOR_KEY) ?? AVATAR_COLORS[0];
+}
+
 function SettingsPage({ user, onUserUpdate }: { user: AuthUser; onUserUpdate: (u: AuthUser) => void }) {
   const [name, setName] = useState(user.name);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [avatarColor, setAvatarColor] = useState(loadAvatarColor);
+
+  const initials = (name || user.email).slice(0, 2).toUpperCase();
+
+  function pickColor(c: string) {
+    setAvatarColor(c);
+    localStorage.setItem(AVATAR_COLOR_KEY, c);
+  }
 
   async function save() {
     setLoading(true);
@@ -2008,6 +2595,27 @@ function SettingsPage({ user, onUserUpdate }: { user: AuthUser; onUserUpdate: (u
       <div className="pageIntro"><div><h1>Настройки</h1><p>Управляй профилем и предпочтениями.</p></div></div>
       <div className="settingsGrid">
         <article className="glassPanel settingsForm">
+          <h2>Аватарка</h2>
+          <div className="avatarEditor">
+            <span className="avatarPreview" style={{ background: avatarColor }}>{initials}</span>
+            <div>
+              <p className="settingsHint">Выбери цвет</p>
+              <div className="avatarColorPicker">
+                {AVATAR_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={cx("avatarColorSwatch", avatarColor === c && "isActive")}
+                    style={{ background: c }}
+                    onClick={() => pickColor(c)}
+                    aria-label={`Цвет ${c}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </article>
+        <article className="glassPanel settingsForm">
           <h2>Профиль</h2>
           {error ? <div className="authError"><Info size={16} /> {error}</div> : null}
           {saved ? <div className="successBanner"><Check size={16} /> Сохранено</div> : null}
@@ -2019,7 +2627,7 @@ function SettingsPage({ user, onUserUpdate }: { user: AuthUser; onUserUpdate: (u
             <span>Email</span>
             <input type="email" value={user.email} disabled />
           </label>
-          <Button onClick={save} loading={loading}>Сохранить изменения</Button>
+          <Button type="submit" onClick={save} loading={loading}>Сохранить изменения</Button>
         </article>
       </div>
     </div>
@@ -2029,56 +2637,199 @@ function SettingsPage({ user, onUserUpdate }: { user: AuthUser; onUserUpdate: (u
 function ProfilePage({
   user,
   session,
+  materials,
   onNavigate,
 }: {
   user: AuthUser;
   session: SessionData | null;
+  materials: MaterialRecord[];
   onNavigate: (r: RouteId) => void;
 }) {
   const name = displayName(user);
+  const totalFiles = materials.reduce((sum, m) => sum + m.files.length, 0);
+
   return (
     <div className="pageWithIntro">
-      <div className="pageIntro"><div><h1>Мой профиль</h1><p>Следи за прогрессом и достигай новых высот.</p></div></div>
-      <article className="profileHero glassPanel">
-        <div className="profileAvatar"><User size={44} /></div>
+      <div className="pageIntro">
         <div>
+          <h1>Мой профиль</h1>
+          <p>Данные аккаунта и статистика</p>
+        </div>
+      </div>
+
+      <article className="profileHero glassPanel">
+        <UserAvatar user={user} size={64} />
+        <div className="profileHeroInfo">
           <h2>{name || "Пользователь"}</h2>
           <p className="profileEmail">{user.email}</p>
-          {session ? (
-            <p>Загружено файлов: <strong>{session.files.length}</strong></p>
-          ) : (
-            <p className="mutedText">Материалов пока нет</p>
-          )}
         </div>
-        {session ? (
-          <Button onClick={() => onNavigate("flashcards")}>Продолжить подготовку</Button>
-        ) : (
-          <Button onClick={() => onNavigate("upload")}>Загрузить материалы</Button>
-        )}
+        <Button onClick={() => onNavigate("settings")}>
+          <Settings size={16} /> Настройки
+        </Button>
       </article>
-      {!session ? (
+
+      <div className="profileStats">
+        <div className="glassPanel profileStatCard">
+          <span className="profileStatNum">{materials.length}</span>
+          <span className="profileStatLabel">Материалов</span>
+        </div>
+        <div className="glassPanel profileStatCard">
+          <span className="profileStatNum">{totalFiles}</span>
+          <span className="profileStatLabel">Файлов загружено</span>
+        </div>
+        <div className="glassPanel profileStatCard">
+          <span className="profileStatNum">{session ? "Есть" : "—"}</span>
+          <span className="profileStatLabel">Активный материал</span>
+        </div>
+      </div>
+
+      {session ? (
+        <div className="glassPanel profileCurrentMaterial">
+          <div className="profileCurrentInfo">
+            <strong>Активный материал</strong>
+            <p>{session.documentTitle}</p>
+            <span className="mutedText">{session.files.length} {session.files.length === 1 ? "файл" : "файла"}</span>
+          </div>
+          <Button onClick={() => onNavigate("flashcards")}>Продолжить подготовку</Button>
+        </div>
+      ) : materials.length === 0 ? (
         <EmptyState
-          icon={Star}
-          title="Прогресса пока нет"
-          text="Загрузи материалы и начни тренироваться — здесь появятся твои достижения."
-          action="Загрузить первый материал"
+          icon={FileText}
+          title="Материалов пока нет"
+          text="Загрузи конспект или лекцию — они появятся в твоей библиотеке."
+          action="Загрузить материалы"
           onAction={() => onNavigate("upload")}
         />
       ) : (
-        <div className="quickGrid" style={{ marginTop: 20 }}>
-          {[
-            { label: "Карточки", icon: LibraryBig, route: "flashcards" as RouteId, desc: "Продолжить изучение" },
-            { label: "Тесты", icon: ClipboardCheck, route: "quiz" as RouteId, desc: "Проверить знания" },
-            { label: "Мнемоники", icon: Brain, route: "mnemonics" as RouteId, desc: "Запомнить легко" },
-            { label: "Настройки", icon: Settings, route: "settings" as RouteId, desc: "Изменить профиль" },
-          ].map(({ label, icon: Icon, route, desc }) => (
-            <button key={label} className="quickCard" type="button" onClick={() => onNavigate(route)}>
-              <div><strong>{label}</strong><span>{desc}</span></div>
-              <Icon size={46} />
-            </button>
-          ))}
+        <div className="glassPanel profileCurrentMaterial">
+          <div className="profileCurrentInfo">
+            <strong>Библиотека</strong>
+            <p>У тебя {materials.length} материал{materials.length === 1 ? "" : materials.length < 5 ? "а" : "ов"} в библиотеке</p>
+          </div>
+          <Button onClick={() => onNavigate("materials")}>Открыть библиотеку</Button>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Floating Косатик chat widget (периодически появляется) ──────────────────
+
+type FloatState = "hidden" | "bubble" | "chat";
+
+function FloatingChat({ session }: { session: SessionData | null }) {
+  const [state, setState] = useState<FloatState>("hidden");
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Show bubble after 25s, repeat every 5 minutes
+  useEffect(() => {
+    const show = () => setState((s) => (s === "hidden" ? "bubble" : s));
+    const first = setTimeout(show, 25_000);
+    const interval = setInterval(show, 5 * 60_000);
+    return () => { clearTimeout(first); clearInterval(interval); };
+  }, []);
+
+  // Auto-hide bubble after 10s (if user doesn't interact)
+  useEffect(() => {
+    if (state !== "bubble") return;
+    const t = setTimeout(() => setState("hidden"), 10_000);
+    return () => clearTimeout(t);
+  }, [state]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  async function send() {
+    if (!session || !input.trim() || loading) return;
+    const text = input.trim();
+    setInput("");
+    setMessages((m) => [...m, { role: "user" as const, text }]);
+    setLoading(true);
+    try {
+      const result = await askDocument(session.collectionId, text);
+      setMessages((m) => [...m, { role: "assistant" as const, text: result.answer }]);
+    } catch {
+      setMessages((m) => [...m, { role: "assistant" as const, text: "Не удалось получить ответ. Попробуй снова." }]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (state === "hidden") return null;
+
+  if (state === "bubble") {
+    return (
+      <div className="floatingChat">
+        <div className="floatingBubble glassPanel">
+          <button type="button" className="floatingBubbleClose" onClick={() => setState("hidden")} aria-label="Закрыть">
+            <X size={14} />
+          </button>
+          <img src={orcaPixelUrl} alt="Косатик" className="floatingBubbleOrca" />
+          <div className="floatingBubbleContent">
+            <p className="floatingBubbleText">
+              {session ? "Привет! Нужна помощь по материалу?" : "Привет! Загрузи материал — я всё объясню."}
+            </p>
+            <button type="button" className="floatingBubbleBtn" onClick={() => setState("chat")}>
+              Спросить Косатика
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // state === "chat"
+  return (
+    <div className="floatingChat">
+      <div className="floatingChatPanel glassPanel">
+        <div className="floatingChatHeader">
+          <img src={orcaAstronautUrl} alt="Косатик" />
+          <div>
+            <strong>Косатик</strong>
+            <span>ИИ-помощник</span>
+          </div>
+          <button type="button" className="floatingChatClose" onClick={() => setState("hidden")} aria-label="Закрыть">
+            <X size={16} />
+          </button>
+        </div>
+        <div className="floatingChatMessages">
+          {messages.length === 0 ? (
+            <div className="floatingChatEmpty">
+              <img src={orcaAstronautUrl} alt="" />
+              <p>{session ? "Задай вопрос по материалу!" : "Загрузи материал для чата."}</p>
+            </div>
+          ) : messages.map((msg, i) => (
+            <div key={i} className={cx("floatingChatMsg", msg.role === "user" ? "fcUser" : "fcAssistant")}>
+              {msg.role === "assistant" ? <img src={orcaAstronautUrl} alt="" className="fcAvatar" /> : null}
+              <p>{msg.text}</p>
+            </div>
+          ))}
+          {loading ? (
+            <div className="floatingChatMsg fcAssistant">
+              <img src={orcaAstronautUrl} alt="" className="fcAvatar" />
+              <Loader2 size={14} className="spin" />
+            </div>
+          ) : null}
+          <div ref={bottomRef} />
+        </div>
+        <div className="floatingChatInput">
+          <textarea
+            rows={1}
+            placeholder={session ? "Вопрос по материалу..." : "Сначала загрузи материал"}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+            disabled={!session || loading}
+          />
+          <button type="button" onClick={send} disabled={!input.trim() || !session || loading} aria-label="Отправить">
+            <Send size={14} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -2089,6 +2840,8 @@ export default function App() {
   const [route, setRoute] = useState<RouteId>(routeFromLocation);
   const [user, setUser] = useState<AuthUser | null>(loadAuth);
   const [session, setSession] = useState<SessionData | null>(loadSession);
+  const [materials, setMaterials] = useState<MaterialRecord[]>([]);
+  const [materialsLoading, setMaterialsLoading] = useState(false);
 
   const navigate = useCallback((next: RouteId) => {
     setRoute(next);
@@ -2102,6 +2855,23 @@ export default function App() {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
+  const loadMaterialsLib = useCallback(async (token: string) => {
+    setMaterialsLoading(true);
+    try {
+      const data = await listMaterials(token);
+      setMaterials(data);
+    } catch {
+      // silent — library is an enhancement, not critical
+    } finally {
+      setMaterialsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user) loadMaterialsLib(user.token);
+    else setMaterials([]);
+  }, [user, loadMaterialsLib]);
+
   useEffect(() => {
     const titles: Partial<Record<RouteId, string>> = {
       landing: "Зачётка — от конспекта до конкурса",
@@ -2112,6 +2882,7 @@ export default function App() {
       processing: "Обработка — Зачётка",
       materials: "Мои материалы — Зачётка",
       summary: "Краткий пересказ — Зачётка",
+      contest: "2к1 — Зачётка",
       flashcards: "Карточки — Зачётка",
       quiz: "Тесты — Зачётка",
       mnemonics: "Мнемоники — Зачётка",
@@ -2138,6 +2909,32 @@ export default function App() {
   function handleSessionReady(s: SessionData) {
     saveSession(s);
     setSession(s);
+    if (user) loadMaterialsLib(user.token);
+  }
+
+  function handleActivateMaterial(mat: MaterialRecord) {
+    const s: SessionData = {
+      collectionId: mat.collection_id,
+      files: mat.files.map((f) => ({
+        filename: f.filename,
+        status: f.status,
+        chunks_count: f.chunks_count,
+      })),
+      uploadedAt: mat.created_at,
+      documentTitle: mat.document_title,
+    };
+    saveSession(s);
+    setSession(s);
+  }
+
+  async function handleDeleteMaterial(collectionId: string) {
+    if (!user) return;
+    await deleteMaterial(user.token, collectionId);
+    setMaterials((prev) => prev.filter((m) => m.collection_id !== collectionId));
+    if (session?.collectionId === collectionId) {
+      saveSession(null);
+      setSession(null);
+    }
   }
 
   function handleUserUpdate(u: AuthUser) {
@@ -2180,19 +2977,20 @@ export default function App() {
     if (!user) return null;
     switch (route) {
       case "dashboard": return <DashboardPage user={user} session={session} onNavigate={navigate} />;
-      case "upload": return <UploadPage onNavigate={navigate} onSessionReady={handleSessionReady} />;
+      case "upload": return <UploadPage onNavigate={navigate} onSessionReady={handleSessionReady} user={user} />;
       case "processing": return <ProcessingPage session={session} onNavigate={navigate} />;
-      case "materials": return <MaterialsPage session={session} onNavigate={navigate} />;
+      case "materials": return <MaterialsPage session={session} materials={materials} materialsLoading={materialsLoading} onNavigate={navigate} onActivate={handleActivateMaterial} onDelete={handleDeleteMaterial} />;
       case "topics": return <TopicsPage session={session} onNavigate={navigate} />;
-      case "summary": return <SummaryPage session={session} user={user} onNavigate={navigate} />;
-      case "flashcards": return <StudyPage mode="flashcards" session={session} user={user} onNavigate={navigate} />;
-      case "quiz": return <StudyPage mode="quiz" session={session} user={user} onNavigate={navigate} />;
-      case "mnemonics": return <StudyPage mode="mnemonics" session={session} user={user} onNavigate={navigate} />;
-      case "chat": return <ChatPage session={session} onNavigate={navigate} />;
+      case "summary": return <SummaryPage session={session} user={user} materials={materials} onNavigate={navigate} />;
+      case "contest": return <ContestPage session={session} user={user} materials={materials} onNavigate={navigate} />;
+      case "flashcards": return <StudyPage mode="flashcards" session={session} user={user} materials={materials} onNavigate={navigate} />;
+      case "quiz": return <StudyPage mode="quiz" session={session} user={user} materials={materials} onNavigate={navigate} />;
+      case "mnemonics": return <StudyPage mode="mnemonics" session={session} user={user} materials={materials} onNavigate={navigate} />;
+      case "chat": return <ChatPage session={session} materials={materials} onActivateMaterial={handleActivateMaterial} onNavigate={navigate} />;
       case "progress": return <ProgressPage session={session} onNavigate={navigate} />;
       case "calendar": return <CalendarPage session={session} onNavigate={navigate} />;
       case "settings": return <SettingsPage user={user} onUserUpdate={handleUserUpdate} />;
-      case "profile": return <ProfilePage user={user} session={session} onNavigate={navigate} />;
+      case "profile": return <ProfilePage user={user} session={session} materials={materials} onNavigate={navigate} />;
       default: return <DashboardPage user={user} session={session} onNavigate={navigate} />;
     }
   }
@@ -2202,6 +3000,7 @@ export default function App() {
       route={route}
       user={user}
       hasSession={!!session}
+      session={session}
       onNavigate={navigate}
       onLogout={handleLogout}
     >

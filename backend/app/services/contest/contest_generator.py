@@ -18,6 +18,7 @@ def generate_contest_training(
     mode: str,
     quality: bool = False,
     document_id: str | None = None,
+    count: int = 10,
     settings: Settings | None = None,
 ) -> dict:
     settings = settings or get_settings()
@@ -38,21 +39,27 @@ def generate_contest_training(
         )
     payload = generate_json(
         CONTEST_SYSTEM_PROMPT,
-        _build_prompt(mode, chunks),
+        _build_prompt(mode, chunks, count),
         quality=quality,
         settings=settings,
     )
     return _attach_source_files(_normalize_response(mode, payload), chunks)
 
 
-def _build_prompt(mode: str, chunks: list[dict]) -> str:
+def _build_prompt(mode: str, chunks: list[dict], count: int = 10) -> str:
     schemas = {
         "blitz": '{"mode":"blitz","time_limit_seconds":120,"questions":[{"question":"...","answer":"...","source_chunk_ids":["..."],"source_files":["..."]}]}',
         "two_to_one": '{"mode":"two_to_one","mistake_limit":2,"questions":[{"statement":"...","is_true":true,"explanation":"...","source_chunk_ids":["..."],"source_files":["..."]}]}',
         "union_biathlon": '{"mode":"union_biathlon","stations":[{"name":"...","questions":[{"question":"...","answer":"...","source_chunk_ids":["..."],"source_files":["..."]}]}]}',
     }
+    count_hint = {
+        "blitz": f"Сгенерируй ровно {count} вопросов.",
+        "two_to_one": f"Сгенерируй ровно {count} утверждений (примерно половина истинных, половина ложных).",
+        "union_biathlon": f"Сгенерируй {count} вопросов по станциям.",
+    }.get(mode, "")
     return (
         f"Режим: {mode}\n"
+        f"{count_hint}\n"
         f"Верни JSON строго в формате: {schemas[mode]}\n\n"
         f"Контекст:\n{format_context(chunks)}"
     )

@@ -14,7 +14,7 @@ from app.core.config import get_settings
 
 _SECRET = os.environ.get("JWT_SECRET", "zachetka-secret-key-2024-please-change-in-prod")
 _ALGO = "HS256"
-_TTL_HOURS = 72
+_TTL_HOURS = 720
 
 
 def _users_path() -> Path:

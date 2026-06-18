@@ -65,6 +65,9 @@ export interface ContestGenerateResponse {
   mistake_limit?: number | null;
   questions?: Record<string, unknown>[] | null;
   stations?: Record<string, unknown>[] | null;
+  result_id?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface DocumentState {
